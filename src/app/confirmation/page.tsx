@@ -175,12 +175,12 @@ function ConfirmationContent() {
               MANDATORY
             </span>
             <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>
-              Open Your Kotak Mahindra Bank Account
+              Open Your Kotak 811 Zero-Balance Digital Account
             </h3>
           </div>
 
           <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.55, marginBottom: 18 }}>
-            To complete your induction and receive daily delivery payouts, you must have an active Kotak Mahindra Bank account. Click the button below to complete your account opening online. Final account provisioning is managed directly by Kotak Mahindra Bank.
+            To complete your induction and receive daily delivery payouts, you must complete your Kotak 811 account opening. Click the button below to proceed to the official Kotak 811 verification portal.
           </p>
 
           <div>
@@ -203,7 +203,7 @@ function ConfirmationContent() {
                 boxShadow: 'var(--shadow-sm)',
               }}
             >
-              <span>Proceed to Kotak Mahindra Bank Account Opening</span>
+              <span>Proceed to Kotak 811 Account Opening</span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                 <polyline points="15 3 21 3 21 9" />

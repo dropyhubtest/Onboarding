@@ -11,7 +11,7 @@ export default function DeliveryCategoriesShowcase() {
         <span className={styles.eyebrow}>High-Demand Verticals</span>
         <h2 className={styles.title}>Choose Your Preferred Delivery Track</h2>
         <p className={styles.subtitle}>
-          DropyHub connects you across India&apos;s largest food delivery networks, instant grocery darkstores, and scheduled e-commerce supply chains.
+          DropyHub connects you across India&apos;s leading food delivery networks, instant grocery darkstores, and scheduled e-commerce supply chains.
         </p>
       </div>
 
@@ -46,6 +46,12 @@ export default function DeliveryCategoriesShowcase() {
             <div className={styles.logoBadge} title="Zomato">
               <Image src="/assets/Home/zomato.png" alt="Zomato" width={75} height={20} unoptimized className={styles.badgeImg} />
             </div>
+            <div className={styles.logoBadge} title="Domino's Pizza">
+              <Image src="/assets/dominos.png" alt="Domino's Pizza" width={70} height={22} unoptimized className={styles.badgeImg} />
+            </div>
+            <div className={styles.logoBadge} title="Pizza Hut">
+              <Image src="/assets/Pizzahut.png" alt="Pizza Hut" width={65} height={22} unoptimized className={styles.badgeImg} />
+            </div>
             <div className={styles.logoBadge} title="Blinkit">
               <Image src="/assets/Home/blinkit.png" alt="Blinkit" width={65} height={20} unoptimized className={styles.badgeImg} />
             </div>
@@ -54,9 +60,6 @@ export default function DeliveryCategoriesShowcase() {
             </div>
             <div className={styles.logoBadge} title="BigBasket">
               <Image src="/assets/Home/big_basket.png" alt="BigBasket" width={75} height={22} unoptimized className={styles.badgeImg} />
-            </div>
-            <div className={styles.logoBadge} title="McDonald's">
-              <Image src="/assets/mcdonalds.png" alt="McDonald's" width={50} height={20} unoptimized className={styles.badgeImg} />
             </div>
             <div className={styles.logoBadge} title="KFC">
               <Image src="/assets/kfc.png" alt="KFC" width={45} height={20} unoptimized className={styles.badgeImg} />
@@ -97,7 +100,7 @@ export default function DeliveryCategoriesShowcase() {
           </div>
 
           <p className={styles.cardDescription}>
-            Deliver packages and products across specialized industries including pharmaceuticals, healthcare, fashion, retail, and general logistics.
+            Deliver packages and products across specialized industries including pharmaceuticals, healthcare, retail distribution, and bulk logistics.
           </p>
 
           <div className={styles.platformTitle}>Representative Ecosystem Partners:</div>
@@ -105,17 +108,14 @@ export default function DeliveryCategoriesShowcase() {
             <div className={styles.logoBadge} title="Apollo 24|7">
               <Image src="/assets/apollo.png" alt="Apollo 24|7" width={75} height={22} unoptimized className={styles.badgeImg} />
             </div>
-            <div className={styles.logoBadge} title="Licious">
-              <Image src="/assets/licious.png" alt="Licious" width={65} height={22} unoptimized className={styles.badgeImg} />
-            </div>
-            <div className={styles.logoBadge} title="Delhivery">
-              <Image src="/assets/Home/delhivery.png" alt="Delhivery" width={75} height={20} unoptimized className={styles.badgeImg} />
-            </div>
             <div className={styles.logoBadge} title="Shadowfax">
               <Image src="/assets/Home/shadowfax.png" alt="Shadowfax" width={78} height={22} unoptimized className={styles.badgeImg} />
             </div>
             <div className={styles.logoBadge} title="Paradise Biryani">
               <Image src="/assets/Paradise.png" alt="Paradise Biryani" width={70} height={22} unoptimized className={styles.badgeImg} />
+            </div>
+            <div className={styles.logoBadge} title="BigBasket Logistics">
+              <Image src="/assets/Home/big_basket.png" alt="BigBasket" width={75} height={22} unoptimized className={styles.badgeImg} />
             </div>
           </div>
 

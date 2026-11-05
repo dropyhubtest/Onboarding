@@ -1278,21 +1278,21 @@ export default function RegistrationWizard() {
                 <div className={styles.kotakContainer}>
                   <div className={styles.kotakHeader}>
                     <div className={styles.kotakBrand}>
-                      <span className={styles.kotakPill}>KOTAK MAHINDRA</span>
-                      <h3 className={styles.kotakTitle}>Mandatory Banking Requirement</h3>
+                      <span className={styles.kotakPill}>KOTAK 811</span>
+                      <h3 className={styles.kotakTitle}>Mandatory Kotak 811 Banking</h3>
                     </div>
                     <span className={styles.mandatoryBadge}>Compulsory For Onboarding</span>
                   </div>
 
                   <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    To complete your delivery partner onboarding, you must have an active Kotak Mahindra Bank account. This account is required as part of our automated zero-fee payroll and daily payout settlement infrastructure. Final account provisioning is managed directly by Kotak Mahindra Bank.
+                    To complete your delivery partner onboarding, you must have an active Kotak 811 zero-balance digital savings bank account. This account is required as part of our automated zero-fee payroll and daily payout settlement infrastructure.
                   </p>
 
                   <div className={styles.kotakInfoCard}>
                     <div className={styles.kotakRuleItem}>
                       <span className={styles.bulletAlert}>&bull;</span>
                       <span>
-                        <strong>Kotak Mahindra Account:</strong> You can open an instant digital Kotak Mahindra Bank account online in under 5 minutes with zero initial deposit or via official branch onboarding.
+                        <strong>Kotak 811 Digital Account:</strong> You can open an instant digital Kotak 811 zero-balance account online in under 5 minutes with zero initial deposit directly via Video KYC.
                       </span>
                     </div>
 
@@ -1306,7 +1306,7 @@ export default function RegistrationWizard() {
                     <div className={styles.kotakRuleItem}>
                       <span className={styles.bulletAlert}>&bull;</span>
                       <span>
-                        <strong>Next Step Flow:</strong> Application submission alone does not guarantee onboarding. After clicking submit below, your application will be securely persisted and you will be directed to the official verified Kotak Mahindra Bank portal.
+                        <strong>Next Step Flow:</strong> Application submission alone does not guarantee onboarding. After clicking submit below, your application will be securely persisted and you will be directed to the official verified Kotak 811 portal.
                       </span>
                     </div>
                   </div>
@@ -1329,7 +1329,7 @@ export default function RegistrationWizard() {
                       }}
                     />
                     <span className={styles.checkboxLabel}>
-                      <strong>Mandatory Acknowledgement:</strong> I understand that creating a Kotak Mahindra Bank account is compulsory for onboarding. I acknowledge that failure to complete this requirement will result in rejection of my application.
+                      <strong>Mandatory Acknowledgement:</strong> I understand that creating a Kotak 811 digital bank account is compulsory for onboarding. I acknowledge that failure to complete this requirement will result in rejection of my application.
                     </span>
                   </label>
                   {errors.kotakAcknowledgement && (
@@ -1398,7 +1398,7 @@ export default function RegistrationWizard() {
                   <span>Submitting &amp; Generating Reference...</span>
                 ) : (
                   <>
-                    <span>Submit Application &amp; Proceed to Kotak Mahindra</span>
+                    <span>Submit Application &amp; Proceed to Kotak 811</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>

@@ -12,6 +12,8 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [search, setSearch] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [kotakFilter, setKotakFilter] = useState<string>('ALL');
 
   // Selected detail modal
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
@@ -24,15 +26,24 @@ export default function AdminPage() {
   const [rejectionReason, setRejectionReason] = useState<string>('');
   const [actionMessage, setActionMessage] = useState<string>('');
 
+  // Keep admin cookie synchronized for direct file streams & tab viewing
+  useEffect(() => {
+    if (adminKey) {
+      document.cookie = `admin_token=${encodeURIComponent(adminKey)}; path=/; max-age=86400; SameSite=Lax`;
+    }
+  }, [adminKey]);
+
   const fetchApplications = async () => {
     setIsLoading(true);
     setError('');
 
     try {
       const params = new URLSearchParams({
-        limit: '50',
+        limit: '100',
       });
       if (search.trim()) params.set('search', search.trim());
+      if (statusFilter !== 'ALL') params.set('status', statusFilter);
+      if (kotakFilter !== 'ALL') params.set('kotakStatus', kotakFilter);
 
       const res = await fetch(`/api/admin/applications?${params.toString()}`, {
         headers: {
@@ -63,7 +74,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     fetchApplications();
-  }, []);
+  }, [statusFilter, kotakFilter]);
 
   const handleOpenDetail = async (id: string) => {
     setSelectedAppId(id);
@@ -136,7 +147,7 @@ export default function AdminPage() {
       if (!res.ok || !json.success) throw new Error(json.error || 'Failed to update Kotak status.');
 
       setDetailData(json.application);
-      setActionMessage(`Kotak banking status updated to "${selectedKotakStatus}".`);
+      setActionMessage(`Kotak 811 banking status updated to "${selectedKotakStatus}".`);
       fetchApplications();
     } catch (err: any) {
       alert(err.message || 'Kotak status update failed.');
@@ -145,6 +156,10 @@ export default function AdminPage() {
 
   const handleViewDoc = (docId: string) => {
     window.open(`/api/admin/documents/${docId}?adminKey=${encodeURIComponent(adminKey)}`, '_blank');
+  };
+
+  const handleDownloadDoc = (docId: string) => {
+    window.open(`/api/admin/documents/${docId}?adminKey=${encodeURIComponent(adminKey)}&download=true`, '_blank');
   };
 
   const getStatusBadge = (status: string) => {
@@ -160,110 +175,191 @@ export default function AdminPage() {
     }
   };
 
+  const getKotakBadge = (status: KotakAccountStatus) => {
+    switch (status) {
+      case 'Completed':
+        return styles.kotakBadgeCompleted;
+      case 'Failed':
+        return styles.kotakBadgePending;
+      default:
+        return styles.kotakBadgeAwaited;
+    }
+  };
+
+  // Metrics
+  const totalApplicants = applications.length;
+  const underReviewCount = applications.filter((a) => a.application_status === 'Under Review').length;
+  const approvedCount = applications.filter((a) => a.application_status === 'Approved').length;
+  const kotakCompletedCount = applications.filter((a) => a.kotak_account_status === 'Completed').length;
+  const kotakPendingCount = applications.filter((a) => a.kotak_account_status === 'Pending').length;
+
   return (
     <div className={styles.adminContainer}>
-      <div className={styles.headerRow}>
-        <div>
-          <h1 className={styles.title}>Delivery Partner Applicants</h1>
-          <p className={styles.subtitle}>
-            Total registered candidates: <strong>{totalCount}</strong>
-          </p>
+      {/* Top Header */}
+      <div className={styles.topHeader}>
+        <div className={styles.titleArea}>
+          <span className={styles.portalBadge}>Recruitment &amp; Operations Center</span>
+          <h1 className={styles.title}>
+            Delivery Partner Management
+            <span className={styles.livePill}>Live Neon DB Connected</span>
+          </h1>
+          <div className={styles.subtitle}>
+            Review applicant identities, verify Aadhaar/PAN cards, and manage mandatory Kotak 811 payroll statuses.
+          </div>
         </div>
 
         <div className={styles.authGroup}>
+          <span className={styles.authLabel}>Passkey:</span>
           <input
             type="password"
             value={adminKey}
             onChange={(e) => setAdminKey(e.target.value)}
-            placeholder="Admin Secret Passkey"
             className={styles.authInput}
+            placeholder="Enter admin passkey..."
           />
           <button type="button" onClick={fetchApplications} className={styles.refreshBtn}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="23 4 23 10 17 10" />
+              <polyline points="1 20 1 14 7 14" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
             Refresh
           </button>
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className={styles.searchBar}>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && fetchApplications()}
-          placeholder="Search applicants by name, mobile number, reference, or city..."
-          className={styles.searchInput}
-        />
-        <button type="button" onClick={fetchApplications} className={styles.searchBtn}>
-          Search
-        </button>
-      </div>
-
       {error && <div className={styles.errorBanner}>{error}</div>}
 
-      {/* Simplified Applicants Table */}
+      {/* KPI Stats Row */}
+      <div className={styles.metricsGrid}>
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Total Real Applicants</div>
+          <div className={styles.metricVal}>{totalApplicants}</div>
+          <div className={styles.metricSub}>Active verified submissions</div>
+        </div>
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Under Review</div>
+          <div className={styles.metricVal} style={{ color: '#0284c7' }}>{underReviewCount}</div>
+          <div className={styles.metricSub}>Recruiter follow-up queue</div>
+        </div>
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Approved Partners</div>
+          <div className={styles.metricVal} style={{ color: '#16a34a' }}>{approvedCount}</div>
+          <div className={styles.metricSub}>Ready for hub dispatch</div>
+        </div>
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Kotak 811 Completed</div>
+          <div className={styles.metricVal} style={{ color: '#16a34a' }}>{kotakCompletedCount}</div>
+          <div className={styles.metricSub}>Bank account verified</div>
+        </div>
+        <div className={styles.metricCard}>
+          <div className={styles.metricLabel}>Kotak 811 Pending</div>
+          <div className={styles.metricVal} style={{ color: '#dc2626' }}>{kotakPendingCount}</div>
+          <div className={styles.metricSub}>Pending candidate action</div>
+        </div>
+      </div>
+
+      {/* Toolbar / Search / Filter */}
+      <div className={styles.toolbar}>
+        <div className={styles.searchWrap}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search candidate name, mobile, reference..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && fetchApplications()}
+            className={styles.searchInput}
+          />
+        </div>
+
+        <div className={styles.filterControls}>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className={styles.filterSelect}
+          >
+            <option value="ALL">All Application Statuses</option>
+            <option value="Pending Review">Pending Review</option>
+            <option value="Under Review">Under Review</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+
+          <select
+            value={kotakFilter}
+            onChange={(e) => setKotakFilter(e.target.value)}
+            className={styles.filterSelect}
+          >
+            <option value="ALL">All Kotak 811 Statuses</option>
+            <option value="Completed">Kotak 811: Completed</option>
+            <option value="Pending">Kotak 811: Pending</option>
+            <option value="Completion Awaited">Kotak 811: Awaited</option>
+            <option value="Failed">Kotak 811: Failed</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Applications Table */}
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Ref ID</th>
-              <th>Applicant Name</th>
-              <th>Mobile</th>
-              <th>City</th>
-              <th>Stream</th>
-              <th>Work Type</th>
-              <th>Vehicle</th>
-              <th>Kotak Mahindra</th>
-              <th>Status</th>
-              <th>Date</th>
-              <th>Action</th>
+              <th>Candidate</th>
+              <th>Contact Details</th>
+              <th>Delivery Tracks</th>
+              <th>Work &amp; Vehicle</th>
+              <th>Kotak 811 Banking</th>
+              <th>Application Status</th>
+              <th>Applied Date</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={11} className={styles.emptyState}>
-                  Loading candidate records...
+                <td colSpan={8} className={styles.emptyState}>
+                  Loading candidate database...
                 </td>
               </tr>
             ) : applications.length === 0 ? (
               <tr>
-                <td colSpan={11} className={styles.emptyState}>
-                  No candidate applications found.
+                <td colSpan={8} className={styles.emptyState}>
+                  No candidate records match your current criteria.
                 </td>
               </tr>
             ) : (
               applications.map((app) => (
                 <tr key={app.id}>
                   <td>
-                    <span className={styles.refTag}>{app.application_reference}</span>
+                    <div className={styles.candidateCell}>
+                      <span className={styles.candidateName}>{app.full_name}</span>
+                      <span className={styles.refTag}>{app.application_reference}</span>
+                    </div>
                   </td>
                   <td>
-                    <div className={styles.nameCell}>{app.full_name}</div>
-                    <div className={styles.emailSub}>{app.email}</div>
+                    <div><strong>{app.mobile_number}</strong></div>
+                    <div style={{ fontSize: 11.5, color: '#64748b' }}>{app.email}</div>
+                    <div style={{ fontSize: 11, color: '#94a3b8' }}>{app.city}, {app.state}</div>
                   </td>
                   <td>
-                    <strong>{app.mobile_number}</strong>
+                    {app.delivery_categories.map((c) => (
+                      <span key={c} className={styles.categoryTag}>
+                        {c === 'food_quick_commerce' ? 'Food & Quick' : 'Logistics'}
+                      </span>
+                    ))}
                   </td>
-                  <td>{app.city}</td>
                   <td>
-                    {app.delivery_categories.includes('food_quick_commerce') && 'Food '}
-                    {app.delivery_categories.includes('logistics_ecommerce') && 'Logistics'}
-                  </td>
-                  <td>{app.work_type}</td>
-                  <td>
-                    <span style={{ color: app.owns_two_wheeler ? '#15803d' : '#b45309', fontWeight: 600 }}>
-                      {app.owns_two_wheeler ? 'Owns Bike' : 'Needs Rental'}
+                    <div><strong>{app.work_type}</strong></div>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: app.owns_two_wheeler ? '#15803d' : '#b45309' }}>
+                      {app.owns_two_wheeler ? '✓ Owns Two-Wheeler' : '! Needs Fleet Bike'}
                     </span>
                   </td>
                   <td>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: app.kotak_account_status === 'Completed' ? '#15803d' : '#b91c1c',
-                      }}
-                    >
+                    <span className={getKotakBadge(app.kotak_account_status)}>
                       {app.kotak_account_status}
                     </span>
                   </td>
@@ -274,16 +370,19 @@ export default function AdminPage() {
                     {new Date(app.submitted_at).toLocaleDateString('en-IN', {
                       day: '2-digit',
                       month: 'short',
+                      year: 'numeric',
                     })}
                   </td>
                   <td>
-                    <button
-                      type="button"
-                      onClick={() => handleOpenDetail(app.id)}
-                      className={styles.viewBtn}
-                    >
-                      View Details
-                    </button>
+                    <div className={styles.actionBtnGroup}>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenDetail(app.id)}
+                        className={styles.viewBtn}
+                      >
+                        Inspect Details
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -297,8 +396,8 @@ export default function AdminPage() {
         <div className={styles.modalOverlay} onClick={() => setSelectedAppId(null)}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             {isDetailLoading || !detailData ? (
-              <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-                Loading applicant details...
+              <div style={{ padding: 48, textAlign: 'center', color: 'var(--text-muted)' }}>
+                Loading full candidate profile...
               </div>
             ) : (
               <>
@@ -306,7 +405,7 @@ export default function AdminPage() {
                   <div>
                     <h2 className={styles.modalTitle}>{detailData.full_name}</h2>
                     <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>
-                      Reference ID: <strong>{detailData.application_reference}</strong> &bull; Submitted:{' '}
+                      Reference ID: <strong>{detailData.application_reference}</strong> &bull; Submitted on{' '}
                       {new Date(detailData.submitted_at).toLocaleString('en-IN', {
                         dateStyle: 'medium',
                         timeStyle: 'short',
@@ -317,6 +416,7 @@ export default function AdminPage() {
                     type="button"
                     onClick={() => setSelectedAppId(null)}
                     className={styles.modalClose}
+                    aria-label="Close modal"
                   >
                     &times;
                   </button>
@@ -368,7 +468,7 @@ export default function AdminPage() {
 
                   {/* 2. Work & Vehicle Readiness */}
                   <div className={styles.cardSection}>
-                    <h3 className={styles.sectionHeading}>Work Preferences &amp; Vehicle</h3>
+                    <h3 className={styles.sectionHeading}>Work Preferences &amp; Vehicle Readiness</h3>
                     <div className={styles.infoGrid}>
                       <div>
                         <div className={styles.infoLabel}>Working Type</div>
@@ -389,7 +489,7 @@ export default function AdminPage() {
                       <div>
                         <div className={styles.infoLabel}>Owns Two-Wheeler</div>
                         <div className={styles.infoValue}>
-                          {detailData.owns_two_wheeler ? 'Yes (Own Bike)' : 'No (Requires Fleet Rental)'}
+                          {detailData.owns_two_wheeler ? 'Yes (Owns Two-Wheeler)' : 'No (Needs Fleet Bike)'}
                         </div>
                       </div>
                       <div>
@@ -415,49 +515,71 @@ export default function AdminPage() {
 
                   {/* 3. Uploaded Identity Documents & Numbers */}
                   <div className={styles.cardSection}>
-                    <h3 className={styles.sectionHeading}>Identity Numbers &amp; Uploaded Documents</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
-                      <div>
+                    <h3 className={styles.sectionHeading}>Mandatory Identity Documents &amp; Verification</h3>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+                      <div style={{ background: '#f8fafc', padding: 14, borderRadius: 8, border: '1px solid #e2e8f0' }}>
                         <div className={styles.infoLabel}>Aadhaar Card Number</div>
-                        <div className={styles.infoValue}>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', letterSpacing: '0.05em' }}>
                           {detailData.aadhaar_number
                             ? `XXXX-XXXX-${detailData.aadhaar_number.replace(/\s+/g, '').slice(-4)}`
-                            : 'Submitted via Document'}
+                            : 'Submitted with Document'}
                         </div>
                       </div>
-                      <div>
+                      <div style={{ background: '#f8fafc', padding: 14, borderRadius: 8, border: '1px solid #e2e8f0' }}>
                         <div className={styles.infoLabel}>PAN Card Number</div>
-                        <div className={styles.infoValue}>
-                          {detailData.pan_number || 'Submitted via Document'}
+                        <div style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', letterSpacing: '0.05em' }}>
+                          {detailData.pan_number || 'Submitted with Document'}
                         </div>
                       </div>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+
+                    <div className={styles.docsList}>
                       {detailData.documents.map((doc) => (
                         <div key={doc.id} className={styles.docItem}>
                           <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase' }}>
-                              {doc.document_type} Card
+                            <div className={styles.docMetaTitle}>
+                              {doc.document_type} Document
                             </div>
-                            <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
-                              {(doc.file_size / 1024).toFixed(0)} KB &bull; Encrypted
+                            <div className={styles.docMetaSub}>
+                              {doc.original_file_name} &bull; {(doc.file_size / 1024).toFixed(0)} KB
                             </div>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleViewDoc(doc.id)}
-                            className={styles.docBtn}
-                          >
-                            View Document
-                          </button>
+                          <div className={styles.docButtons}>
+                            <button
+                              type="button"
+                              onClick={() => handleViewDoc(doc.id)}
+                              className={styles.docViewBtn}
+                              title="Open document in new browser tab"
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                              View
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadDoc(doc.id)}
+                              className={styles.docDownloadBtn}
+                              title="Download document file directly"
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                              </svg>
+                              Download
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* 4. Streamlined Actions */}
+                  {/* 4. Recruiter Decision & Kotak 811 Status */}
                   <div className={styles.cardSection}>
-                    <h3 className={styles.sectionHeading}>Recruiter Decision &amp; Kotak Status</h3>
+                    <h3 className={styles.sectionHeading}>Recruiter Decision &amp; Kotak 811 Management</h3>
                     <div className={styles.actionRow}>
                       <div>
                         <label className={styles.infoLabel}>Application Status</label>
@@ -471,33 +593,49 @@ export default function AdminPage() {
                           <option value="Approved">Approved</option>
                           <option value="Rejected">Rejected</option>
                         </select>
+                        {selectedStatus === 'Rejected' && (
+                          <input
+                            type="text"
+                            placeholder="Rejection reason..."
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            style={{
+                              width: '100%',
+                              marginTop: 8,
+                              padding: '8px 12px',
+                              border: '1px solid #fca5a5',
+                              borderRadius: 4,
+                              fontSize: 12.5,
+                            }}
+                          />
+                        )}
                         <button
                           type="button"
                           onClick={handleUpdateStatus}
                           className={styles.applyActionBtn}
                         >
-                          Save Status
+                          Save Application Status
                         </button>
                       </div>
 
                       <div>
-                        <label className={styles.infoLabel}>Kotak Mahindra Bank Status</label>
+                        <label className={styles.infoLabel}>Kotak 811 Banking Status</label>
                         <select
                           value={selectedKotakStatus}
                           onChange={(e) => setSelectedKotakStatus(e.target.value as KotakAccountStatus)}
                           className={styles.actionSelect}
                         >
-                          <option value="Pending">Pending</option>
-                          <option value="Completed">Completed</option>
+                          <option value="Pending">Pending (Not Started)</option>
+                          <option value="Completed">Completed (Account Verified)</option>
                           <option value="Completion Awaited">Completion Awaited</option>
-                          <option value="Failed">Failed</option>
+                          <option value="Failed">Failed (KYC Incomplete)</option>
                         </select>
                         <button
                           type="button"
                           onClick={handleUpdateKotak}
                           className={styles.applyActionBtn}
                         >
-                          Save Kotak Status
+                          Save Kotak 811 Status
                         </button>
                       </div>
                     </div>

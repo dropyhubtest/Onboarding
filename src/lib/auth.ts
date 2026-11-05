@@ -8,14 +8,17 @@ export interface AdminUser {
 }
 
 export function verifyAdminAuth(req: NextRequest): AdminUser | null {
-  // Check authorization header or custom header
+  // Check authorization header, custom header, query param, or cookie
   const authHeader = req.headers.get('authorization');
   const customHeader = req.headers.get('x-admin-key');
   const cookieKey = req.cookies.get('admin_token')?.value;
+  const queryKey = req.nextUrl.searchParams.get('adminKey') || req.nextUrl.searchParams.get('key');
 
   let providedToken = '';
 
-  if (customHeader) {
+  if (queryKey) {
+    providedToken = queryKey;
+  } else if (customHeader) {
     providedToken = customHeader;
   } else if (authHeader && authHeader.startsWith('Bearer ')) {
     providedToken = authHeader.substring(7);
@@ -27,9 +30,12 @@ export function verifyAdminAuth(req: NextRequest): AdminUser | null {
     return null;
   }
 
-  // Constant-time comparison or direct check
+  // Verification check against ADMIN_SECRET
   if (providedToken === ADMIN_SECRET) {
-    const adminName = req.headers.get('x-admin-name') || 'Administrator';
+    const adminName =
+      req.headers.get('x-admin-name') ||
+      req.nextUrl.searchParams.get('adminName') ||
+      'Administrator';
     return {
       role: 'admin',
       name: adminName,

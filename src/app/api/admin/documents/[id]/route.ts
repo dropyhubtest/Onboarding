@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminAuth } from '@/lib/auth';
-import { getDocumentById } from '@/lib/db';
+import { getDocumentByIdAsync } from '@/lib/db';
 import { readDocumentFileAsync } from '@/lib/storage';
 
 export async function GET(
@@ -9,16 +9,22 @@ export async function GET(
 ) {
   const admin = verifyAdminAuth(req);
   if (!admin) {
-    return NextResponse.json({ error: 'Unauthorized. Admin credentials required to access documents.' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Unauthorized. Admin credentials required to access documents.' },
+      { status: 401 }
+    );
   }
 
   try {
     const { id } = await params;
-    const docRecord = getDocumentById(id);
+    const docRecord = await getDocumentByIdAsync(id);
 
     if (!docRecord) {
       return NextResponse.json({ error: 'Document not found.' }, { status: 404 });
     }
+
+    const isDownload = req.nextUrl.searchParams.get('download') === 'true';
+    const dispositionType = isDownload ? 'attachment' : 'inline';
 
     const fileBuffer = await readDocumentFileAsync(docRecord.file_path, docRecord.stored_file_name);
 
@@ -26,8 +32,8 @@ export async function GET(
     return new NextResponse(new Uint8Array(fileBuffer), {
       status: 200,
       headers: {
-        'Content-Type': docRecord.mime_type,
-        'Content-Disposition': `inline; filename="${encodeURIComponent(docRecord.original_file_name)}"`,
+        'Content-Type': docRecord.mime_type || 'application/octet-stream',
+        'Content-Disposition': `${dispositionType}; filename="${encodeURIComponent(docRecord.original_file_name)}"`,
         'Cache-Control': 'private, no-cache, no-store, must-revalidate',
         'X-Content-Type-Options': 'nosniff',
       },

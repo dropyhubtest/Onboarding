@@ -7,14 +7,13 @@ import styles from './PartnerLogoTicker.module.css';
 const PARTNERS = [
   { name: 'Swiggy', src: '/assets/Home/swiggy.png', width: 85, height: 28 },
   { name: 'Zomato', src: '/assets/Home/zomato.png', width: 90, height: 26 },
+  { name: 'Domino\'s Pizza', src: '/assets/dominos.png', width: 85, height: 28 },
+  { name: 'Pizza Hut', src: '/assets/Pizzahut.png', width: 80, height: 28 },
   { name: 'Blinkit', src: '/assets/Home/blinkit.png', width: 80, height: 26 },
   { name: 'Zepto', src: '/assets/Home/zepto.png', width: 75, height: 26 },
   { name: 'BigBasket', src: '/assets/Home/big_basket.png', width: 95, height: 28 },
   { name: 'Apollo 24|7', src: '/assets/apollo.png', width: 85, height: 28 },
-  { name: 'Licious', src: '/assets/licious.png', width: 75, height: 28 },
-  { name: 'Delhivery', src: '/assets/Home/delhivery.png', width: 90, height: 26 },
   { name: 'Shadowfax', src: '/assets/Home/shadowfax.png', width: 95, height: 28 },
-  { name: 'McDonald\'s', src: '/assets/mcdonalds.png', width: 70, height: 28 },
   { name: 'KFC', src: '/assets/kfc.png', width: 70, height: 28 },
   { name: 'Paradise Biryani', src: '/assets/Paradise.png', width: 80, height: 28 },
 ];

@@ -543,6 +543,25 @@ export function getDocumentById(id: string): ApplicationDocument | null {
   return formatDocumentRow(row);
 }
 
+export async function getDocumentByIdAsync(id: string): Promise<ApplicationDocument | null> {
+  const localDoc = getDocumentById(id);
+  if (localDoc) return localDoc;
+
+  if (process.env.DATABASE_URL) {
+    try {
+      const { neon } = await import('@neondatabase/serverless');
+      const sql = neon(process.env.DATABASE_URL);
+      const rows = await sql`SELECT * FROM delivery_partner_documents WHERE id = ${id}`;
+      if (rows && rows.length > 0) {
+        return formatDocumentRow(rows[0]);
+      }
+    } catch (e) {
+      console.warn('Neon getDocumentByIdAsync notice:', e);
+    }
+  }
+  return null;
+}
+
 // Helper formatters
 function formatApplicationRow(row: any): DeliveryPartnerApplication {
   let categories: string[] = [];
