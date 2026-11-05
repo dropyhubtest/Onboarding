@@ -11,11 +11,11 @@ const PARTNERS = [
   { name: 'Zepto', src: '/assets/Home/zepto.png', width: 75, height: 26 },
   { name: 'BigBasket', src: '/assets/Home/big_basket.png', width: 95, height: 28 },
   { name: 'Apollo 24|7', src: '/assets/apollo.png', width: 85, height: 28 },
-  { name: 'Licious', src: '/assets/licious.jfif', width: 75, height: 28 },
+  { name: 'Licious', src: '/assets/licious.png', width: 75, height: 28 },
   { name: 'Delhivery', src: '/assets/Home/delhivery.png', width: 90, height: 26 },
   { name: 'Shadowfax', src: '/assets/Home/shadowfax.png', width: 95, height: 28 },
-  { name: 'McDonald\'s', src: '/assets/mcdonalds.jfif', width: 70, height: 28 },
-  { name: 'KFC', src: '/assets/KFC.jfif', width: 70, height: 28 },
+  { name: 'McDonald\'s', src: '/assets/mcdonalds.png', width: 70, height: 28 },
+  { name: 'KFC', src: '/assets/kfc.png', width: 70, height: 28 },
   { name: 'Paradise Biryani', src: '/assets/Paradise.png', width: 80, height: 28 },
 ];
 
@@ -36,6 +36,7 @@ export default function PartnerLogoTicker() {
               alt={p.name}
               width={p.width}
               height={p.height}
+              unoptimized
               className={styles.logoImg}
             />
           </div>
