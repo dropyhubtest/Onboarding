@@ -95,21 +95,19 @@ export async function saveDocumentBuffer(
   // 1. Write to local storage
   await fs.promises.writeFile(filePath, buffer);
 
-  // 2. Upload to Neon Object Storage
+  // 2. Upload to Neon Object Storage in background
   const s3 = getNeonS3Client();
   if (s3) {
-    try {
-      await s3.send(
-        new PutObjectCommand({
-          Bucket: NEON_BUCKET,
-          Key: `documents/${storedFileName}`,
-          Body: buffer,
-          ContentType: mimeType,
-        })
-      );
-    } catch (err) {
-      console.warn('Neon Object Storage upload fallback to disk:', err);
-    }
+    s3.send(
+      new PutObjectCommand({
+        Bucket: NEON_BUCKET,
+        Key: `documents/${storedFileName}`,
+        Body: buffer,
+        ContentType: mimeType,
+      })
+    ).catch((err) => {
+      console.warn('Neon Object Storage upload notice:', err?.message || err);
+    });
   }
 
   return {
