@@ -1,0 +1,70 @@
+.container {
+  padding: 32px 32px 48px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.labelWrapper {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+}
+
+.logoGrid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.logoCard {
+  background: #ffffff;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 14px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  min-width: 120px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.logoCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.logoImg {
+  max-height: 36px;
+  width: auto;
+  object-fit: contain;
+  filter: grayscale(20%);
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.logoCard:hover .logoImg {
+  filter: grayscale(0%);
+  transform: scale(1.05);
+}
+
+@media (max-width: 640px) {
+  .logoCard {
+    padding: 10px 16px;
+    height: 52px;
+    min-width: 90px;
+  }
+  .logoImg {
+    max-height: 28px;
+  }
+}

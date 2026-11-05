@@ -1,0 +1,10 @@
+<svg width="1440" height="43" viewBox="0 0 1440 43" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="hatchPattern352" width="16" height="16" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="16" stroke="#C3C4C8" stroke-width="1" stroke-opacity="0.6" />
+    </pattern>
+  </defs>
+  <rect width="1440" height="43" fill="url(#hatchPattern352)" />
+  <line x1="0" y1="0.5" x2="1440" y2="0.5" stroke="#C3C4C8" stroke-width="1" />
+  <line x1="0" y1="42.5" x2="1440" y2="42.5" stroke="#C3C4C8" stroke-width="1" />
+</svg>

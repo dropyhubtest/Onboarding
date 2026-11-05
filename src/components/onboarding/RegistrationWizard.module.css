@@ -1,0 +1,619 @@
+.section {
+  padding: 48px 32px 80px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+.wrapper {
+  background: #ffffff;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.wizardHeader {
+  padding: 36px 40px 24px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-canvas);
+}
+
+.headerTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.headerSubtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Stepper Progress Bar (Light Mode) */
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+  position: relative;
+}
+
+.stepper::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: var(--border-default);
+  z-index: 1;
+}
+
+.stepItem {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.stepCircle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid var(--border-strong);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.stepCircleActive {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.stepCircleCompleted {
+  background: var(--status-success);
+  border-color: var(--status-success);
+  color: #ffffff;
+}
+
+.stepLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.stepLabelActive {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* Form Body */
+.formBody {
+  padding: 36px 40px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.requiredMark {
+  color: #dc2626;
+  margin-left: 3px;
+}
+
+.hint {
+  font-size: 11.5px;
+  color: var(--text-light);
+  font-weight: 400;
+}
+
+.input, .select, .textarea {
+  width: 100%;
+  padding: 11px 14px;
+  background: #ffffff;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input::placeholder, .textarea::placeholder {
+  color: #94a3b8;
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+.inputError {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2 !important;
+}
+
+.errorText {
+  font-size: 12px;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Category Selection Cards in Step 2 */
+.selectCardGroup {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.selectableCard {
+  background: #ffffff;
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.selectableCard:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-canvas);
+}
+
+.selectableCardSelected {
+  border-color: var(--brand-primary);
+  background: #f8fafc;
+  box-shadow: var(--shadow-sm);
+}
+
+.cardCheck {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  font-size: 12px;
+}
+
+.cardCheckSelected {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #ffffff;
+}
+
+.selectCardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.selectCardDesc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.partnerPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.partnerPill {
+  font-size: 11.5px;
+  font-weight: 500;
+  background: #ffffff;
+  border: 1px solid var(--border-default);
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  color: var(--text-muted);
+}
+
+/* Radio Group Box (Vehicle, License, RC, Phone) */
+.radioOptionsRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.radioOption {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+}
+
+.radioOption:hover {
+  background: var(--bg-subtle);
+}
+
+.radioOptionSelected {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.infoNote {
+  background: var(--brand-blue-bg);
+  border: 1px solid var(--brand-blue-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #1e40af;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* Document Upload Dropzones (Light Mode) */
+.uploadZone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  text-align: center;
+  background: var(--bg-canvas);
+  transition: all 0.15s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.uploadZone:hover {
+  border-color: var(--brand-primary);
+  background: #ffffff;
+}
+
+.uploadIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.uploadTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.uploadMeta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.fileSuccessCard {
+  background: var(--status-success-bg);
+  border: 1px solid var(--status-success-border);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fileInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fileSuccessIcon {
+  color: var(--status-success);
+}
+
+.fileName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.fileSize {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.replaceFileBtn {
+  font-size: 12px;
+  font-weight: 600;
+  color: #dc2626;
+  text-decoration: underline;
+  padding: 4px;
+}
+
+.securityConsentCard {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* Kotak Banking Section (Phase 4 - Clean Light Style) */
+.kotakContainer {
+  background: #ffffff;
+  border: 2px solid var(--kotak-border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.kotakHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.kotakBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kotakPill {
+  background: var(--kotak-primary);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  letter-spacing: 0.05em;
+}
+
+.kotakTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.mandatoryBadge {
+  background: var(--kotak-bg);
+  border: 1px solid var(--kotak-border);
+  color: var(--kotak-text);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.kotakInfoCard {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kotakRuleItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.bulletAlert {
+  color: var(--kotak-primary);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--kotak-bg);
+  border: 1px solid var(--kotak-border);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  cursor: pointer;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: var(--kotak-primary);
+}
+
+.checkboxLabel {
+  font-size: 13px;
+  color: var(--kotak-text);
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+/* Wizard Navigation Footer */
+.wizardFooter {
+  padding: 20px 40px;
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-canvas);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.backBtn {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: #ffffff;
+  border: 1px solid var(--border-default);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.backBtn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+.nextBtn {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--brand-primary);
+  padding: 10px 24px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nextBtn:hover:not(:disabled) {
+  background: var(--brand-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.nextBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submitBtn {
+  background: var(--brand-primary);
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 700;
+  padding: 12px 28px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: var(--brand-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.errorBanner {
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  color: var(--status-danger);
+  font-size: 13px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 32px 16px;
+  }
+  .wizardHeader, .formBody, .wizardFooter {
+    padding: 20px 16px;
+  }
+  .formGrid, .selectCardGroup {
+    grid-template-columns: 1fr;
+  }
+  .stepper {
+    overflow-x: auto;
+  }
+  .stepLabel {
+    display: none;
+  }
+}
