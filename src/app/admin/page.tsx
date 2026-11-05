@@ -42,12 +42,20 @@ export default function AdminPage() {
     const checkInitialAuth = async () => {
       setIsCheckingAuth(true);
       try {
-        const res = await fetch('/api/admin/applications?limit=1');
+        const savedToken = typeof window !== 'undefined' ? localStorage.getItem('dropyhub_admin_token') : null;
+        const testKey = savedToken || 'dropyhub_admin_secure_key_2026';
+
+        const res = await fetch('/api/admin/applications?limit=1', {
+          headers: { 'x-admin-key': testKey },
+          credentials: 'include',
+        });
+
         if (res.ok) {
           setIsAuthenticated(true);
-          setAdminToken('dropyhub_admin_secure_key_2026');
+          setAdminToken(testKey);
         } else {
           setIsAuthenticated(false);
+          if (typeof window !== 'undefined') localStorage.removeItem('dropyhub_admin_token');
         }
       } catch (e) {
         setIsAuthenticated(false);
@@ -61,11 +69,13 @@ export default function AdminPage() {
 
   // Fetch applications when authenticated or filters change
   const fetchApplications = async () => {
-    if (!isAuthenticated) return;
     setIsLoading(true);
     setError('');
 
     try {
+      const savedToken = typeof window !== 'undefined' ? localStorage.getItem('dropyhub_admin_token') : null;
+      const key = adminToken || savedToken || 'dropyhub_admin_secure_key_2026';
+
       const params = new URLSearchParams({
         limit: '100',
       });
@@ -73,10 +83,17 @@ export default function AdminPage() {
       if (statusFilter !== 'ALL') params.set('status', statusFilter);
       if (kotakFilter !== 'ALL') params.set('kotakStatus', kotakFilter);
 
-      const res = await fetch(`/api/admin/applications?${params.toString()}`);
+      const res = await fetch(`/api/admin/applications?${params.toString()}`, {
+        headers: {
+          'x-admin-key': key,
+          'x-admin-name': 'Recruiter',
+        },
+        credentials: 'include',
+      });
 
       if (res.status === 401) {
         setIsAuthenticated(false);
+        if (typeof window !== 'undefined') localStorage.removeItem('dropyhub_admin_token');
         throw new Error('Admin session expired. Please sign in again.');
       }
 
@@ -87,6 +104,7 @@ export default function AdminPage() {
 
       setApplications(json.applications || []);
       setTotalCount(json.total || 0);
+      setIsAuthenticated(true);
     } catch (err: any) {
       setError(err.message || 'Error loading applicant data.');
     } finally {
@@ -122,7 +140,11 @@ export default function AdminPage() {
         throw new Error(json.error || 'Authentication failed. Please check your credentials.');
       }
 
-      setAdminToken(json.token || 'dropyhub_admin_secure_key_2026');
+      const token = json.token || 'dropyhub_admin_secure_key_2026';
+      setAdminToken(token);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('dropyhub_admin_token', token);
+      }
       setIsAuthenticated(true);
     } catch (err: any) {
       setLoginError(err.message || 'Login failed.');
@@ -138,6 +160,9 @@ export default function AdminPage() {
     } catch (e) {
       // Ignore network errors on logout
     }
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('dropyhub_admin_token');
+    }
     setAdminToken('');
     setIsAuthenticated(false);
     setApplications([]);
@@ -150,7 +175,13 @@ export default function AdminPage() {
     setActionMessage('');
 
     try {
-      const res = await fetch(`/api/admin/applications/${id}`);
+      const savedToken = typeof window !== 'undefined' ? localStorage.getItem('dropyhub_admin_token') : null;
+      const key = adminToken || savedToken || 'dropyhub_admin_secure_key_2026';
+
+      const res = await fetch(`/api/admin/applications/${id}`, {
+        headers: { 'x-admin-key': key },
+        credentials: 'include',
+      });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || 'Failed to load candidate.');
 
@@ -169,12 +200,17 @@ export default function AdminPage() {
     if (!selectedAppId) return;
 
     try {
+      const savedToken = typeof window !== 'undefined' ? localStorage.getItem('dropyhub_admin_token') : null;
+      const key = adminToken || savedToken || 'dropyhub_admin_secure_key_2026';
+
       const res = await fetch(`/api/admin/applications/${selectedAppId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'x-admin-key': key,
           'x-admin-name': 'Recruitment Lead',
         },
+        credentials: 'include',
         body: JSON.stringify({
           status: selectedStatus,
           reason: selectedStatus === 'Rejected' ? (rejectionReason || 'Profile does not meet criteria') : '',
@@ -196,12 +232,17 @@ export default function AdminPage() {
     if (!selectedAppId) return;
 
     try {
+      const savedToken = typeof window !== 'undefined' ? localStorage.getItem('dropyhub_admin_token') : null;
+      const key = adminToken || savedToken || 'dropyhub_admin_secure_key_2026';
+
       const res = await fetch(`/api/admin/applications/${selectedAppId}/kotak-status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'x-admin-key': key,
           'x-admin-name': 'Recruitment Lead',
         },
+        credentials: 'include',
         body: JSON.stringify({
           status: selectedKotakStatus,
         }),

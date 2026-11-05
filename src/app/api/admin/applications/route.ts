@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminAuth } from '@/lib/auth';
-import { listApplications } from '@/lib/db';
+import { listApplicationsAsync } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   const admin = verifyAdminAuth(req);
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '15', 10);
 
-    const result = listApplications({
+    const result = await listApplicationsAsync({
       search,
       status,
       category,
@@ -38,6 +38,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('Admin list applications error:', error?.message || error);
-    return NextResponse.json({ error: 'Failed to retrieve applications.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Failed to retrieve applications.' }, { status: 500 });
   }
 }

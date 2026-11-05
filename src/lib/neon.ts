@@ -1,5 +1,5 @@
 import { neon, type NeonQueryFunction } from '@neondatabase/serverless';
-import type { DeliveryPartnerApplication, ApplicationDocument, StatusHistoryEntry } from '@/types';
+import type { DeliveryPartnerApplication, ApplicationDocument, StatusHistoryEntry, AdminApplicationDetail, ApplicationStatus, KotakAccountStatus } from '@/types';
 
 let sqlClient: NeonQueryFunction<false, false> | null = null;
 
@@ -86,6 +86,53 @@ export async function initNeonPostgresSchema(): Promise<void> {
   } catch (err) {
     console.warn('Neon Postgres schema initialization notice:', err);
   }
+}
+
+export function formatNeonApplicationRow(row: any): DeliveryPartnerApplication {
+  let categories: string[] = [];
+  try {
+    categories = typeof row.delivery_categories === 'string' 
+      ? JSON.parse(row.delivery_categories) 
+      : (row.delivery_categories || []);
+  } catch (e) {
+    categories = [];
+  }
+
+  return {
+    id: row.id,
+    application_reference: row.application_reference,
+    full_name: row.full_name,
+    date_of_birth: row.date_of_birth,
+    gender: row.gender || '',
+    mobile_number: row.mobile_number,
+    alternate_mobile_number: row.alternate_mobile_number || '',
+    email: row.email,
+    address: row.address,
+    city: row.city,
+    state: row.state,
+    pincode: row.pincode,
+    aadhaar_number: row.aadhaar_number || '',
+    pan_number: row.pan_number || '',
+    delivery_categories: categories,
+    work_type: row.work_type,
+    preferred_working_hours: row.preferred_working_hours,
+    preferred_delivery_location: row.preferred_delivery_location,
+    preferred_service_area: row.preferred_service_area,
+    employment_status: row.employment_status || '',
+    owns_two_wheeler: Boolean(row.owns_two_wheeler),
+    has_driving_license: Boolean(row.has_driving_license),
+    has_vehicle_registration: Boolean(row.has_vehicle_registration),
+    has_smartphone: Boolean(row.has_smartphone),
+    kotak_account_status: row.kotak_account_status,
+    application_status: row.application_status,
+    privacy_consent: Boolean(row.privacy_consent),
+    kotak_acknowledgement: Boolean(row.kotak_acknowledgement),
+    document_processing_status: row.document_processing_status,
+    internal_notes: row.internal_notes || '',
+    rejection_reason: row.rejection_reason || '',
+    submitted_at: row.submitted_at,
+    updated_at: row.updated_at,
+  };
 }
 
 export async function syncApplicationToNeon(app: DeliveryPartnerApplication): Promise<void> {
@@ -191,4 +238,196 @@ export async function syncDocumentToNeon(doc: ApplicationDocument): Promise<void
   } catch (err) {
     console.warn('Neon Postgres document sync error:', err);
   }
+}
+
+export interface ApplicationFilterParams {
+  search?: string;
+  status?: string;
+  category?: string;
+  city?: string;
+  kotakStatus?: string;
+  sortBy?: 'submitted_at' | 'full_name' | 'city';
+  sortOrder?: 'ASC' | 'DESC';
+  page?: number;
+  limit?: number;
+}
+
+export async function listApplicationsFromNeon(params: ApplicationFilterParams) {
+  const sql = getNeonSql();
+  if (!sql) throw new Error('Neon database is not configured.');
+
+  await initNeonPostgresSchema();
+
+  const {
+    search,
+    status,
+    category,
+    city,
+    kotakStatus,
+    sortBy = 'submitted_at',
+    sortOrder = 'DESC',
+    page = 1,
+    limit = 15,
+  } = params;
+
+  const whereClauses: string[] = [];
+  const args: any[] = [];
+
+  if (search) {
+    const idx1 = args.length + 1;
+    const idx2 = args.length + 2;
+    const idx3 = args.length + 3;
+    const idx4 = args.length + 4;
+    whereClauses.push(`(full_name ILIKE $${idx1} OR mobile_number ILIKE $${idx2} OR application_reference ILIKE $${idx3} OR email ILIKE $${idx4})`);
+    const term = `%${search.trim()}%`;
+    args.push(term, term, term, term);
+  }
+
+  if (status && status !== 'ALL') {
+    const idx = args.length + 1;
+    whereClauses.push(`application_status = $${idx}`);
+    args.push(status);
+  }
+
+  if (kotakStatus && kotakStatus !== 'ALL') {
+    const idx = args.length + 1;
+    whereClauses.push(`kotak_account_status = $${idx}`);
+    args.push(kotakStatus);
+  }
+
+  if (city && city !== 'ALL') {
+    const idx = args.length + 1;
+    whereClauses.push(`city ILIKE $${idx}`);
+    args.push(`%${city.trim()}%`);
+  }
+
+  if (category && category !== 'ALL') {
+    const idx = args.length + 1;
+    whereClauses.push(`delivery_categories ILIKE $${idx}`);
+    args.push(`%${category}%`);
+  }
+
+  const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+  const countResult = await sql.query(`SELECT COUNT(*) as total FROM delivery_partner_applications ${whereSql}`, args);
+  const total = parseInt(countResult[0]?.total || '0', 10);
+
+  const allowedSortCols = ['submitted_at', 'full_name', 'city'];
+  const safeSortCol = allowedSortCols.includes(sortBy) ? sortBy : 'submitted_at';
+  const safeSortOrder = sortOrder === 'ASC' ? 'ASC' : 'DESC';
+
+  const safeLimit = Math.max(1, Math.min(100, limit));
+  const safePage = Math.max(1, page);
+  const safeOffset = (safePage - 1) * safeLimit;
+
+  const querySql = `
+    SELECT * FROM delivery_partner_applications
+    ${whereSql}
+    ORDER BY ${safeSortCol} ${safeSortOrder}
+    LIMIT ${safeLimit} OFFSET ${safeOffset}
+  `;
+
+  const rows = await sql.query(querySql, args);
+
+  return {
+    applications: rows.map(formatNeonApplicationRow),
+    total,
+    page: safePage,
+    limit: safeLimit,
+    totalPages: Math.ceil(total / safeLimit) || 1,
+  };
+}
+
+export async function getApplicationDetailFromNeon(id: string): Promise<AdminApplicationDetail | null> {
+  const sql = getNeonSql();
+  if (!sql) return null;
+
+  await initNeonPostgresSchema();
+  const appRows = await sql.query('SELECT * FROM delivery_partner_applications WHERE id = $1 LIMIT 1', [id]);
+  if (!appRows || appRows.length === 0) return null;
+
+  const app = formatNeonApplicationRow(appRows[0]);
+  const docRows = await sql.query('SELECT * FROM delivery_partner_documents WHERE application_id = $1', [id]);
+  const historyRows = await sql.query('SELECT * FROM delivery_partner_status_history WHERE application_id = $1 ORDER BY created_at DESC', [id]);
+
+  return {
+    ...app,
+    documents: docRows.map((doc: any) => ({
+      id: doc.id,
+      application_id: doc.application_id,
+      document_type: doc.document_type,
+      original_file_name: doc.original_file_name,
+      stored_file_name: doc.stored_file_name,
+      file_path: doc.file_path,
+      file_size: Number(doc.file_size),
+      mime_type: doc.mime_type,
+      verification_status: doc.verification_status,
+      uploaded_at: doc.uploaded_at,
+    })),
+    history: historyRows.map((h: any) => ({
+      id: h.id,
+      application_id: h.application_id,
+      change_type: h.change_type,
+      previous_status: h.previous_status,
+      new_status: h.new_status,
+      changed_by: h.changed_by,
+      reason_or_note: h.reason_or_note,
+      created_at: h.created_at,
+    })),
+  };
+}
+
+export async function updateApplicationStatusInNeon(
+  id: string,
+  newStatus: ApplicationStatus,
+  adminName: string,
+  reasonOrNote?: string
+): Promise<AdminApplicationDetail | null> {
+  const sql = getNeonSql();
+  if (!sql) return null;
+
+  await initNeonPostgresSchema();
+  const currentRows = await sql.query('SELECT application_status FROM delivery_partner_applications WHERE id = $1', [id]);
+  const currentStatus = currentRows[0]?.application_status || '';
+
+  const now = new Date().toISOString();
+  await sql.query(
+    'UPDATE delivery_partner_applications SET application_status = $1, rejection_reason = $2, updated_at = $3 WHERE id = $4',
+    [newStatus, newStatus === 'Rejected' ? (reasonOrNote || '') : '', now, id]
+  );
+
+  const histId = `hist_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  await sql.query(
+    'INSERT INTO delivery_partner_status_history (id, application_id, change_type, previous_status, new_status, changed_by, reason_or_note, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+    [histId, id, 'APPLICATION_STATUS', currentStatus, newStatus, adminName, reasonOrNote || '', now]
+  );
+
+  return getApplicationDetailFromNeon(id);
+}
+
+export async function updateKotakStatusInNeon(
+  id: string,
+  newStatus: KotakAccountStatus,
+  adminName: string
+): Promise<AdminApplicationDetail | null> {
+  const sql = getNeonSql();
+  if (!sql) return null;
+
+  await initNeonPostgresSchema();
+  const currentRows = await sql.query('SELECT kotak_account_status FROM delivery_partner_applications WHERE id = $1', [id]);
+  const currentStatus = currentRows[0]?.kotak_account_status || '';
+
+  const now = new Date().toISOString();
+  await sql.query(
+    'UPDATE delivery_partner_applications SET kotak_account_status = $1, updated_at = $2 WHERE id = $3',
+    [newStatus, now, id]
+  );
+
+  const histId = `hist_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  await sql.query(
+    'INSERT INTO delivery_partner_status_history (id, application_id, change_type, previous_status, new_status, changed_by, reason_or_note, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+    [histId, id, 'KOTAK_STATUS', currentStatus, newStatus, adminName, '', now]
+  );
+
+  return getApplicationDetailFromNeon(id);
 }

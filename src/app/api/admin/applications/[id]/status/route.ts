@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminAuth } from '@/lib/auth';
-import { updateApplicationStatus } from '@/lib/db';
+import { updateApplicationStatusAsync } from '@/lib/db';
 import { ApplicationStatus } from '@/types';
 
 const VALID_STATUSES: ApplicationStatus[] = [
@@ -39,7 +39,7 @@ export async function PATCH(
       );
     }
 
-    const updated = updateApplicationStatus(id, status, admin.name, reason);
+    const updated = await updateApplicationStatusAsync(id, status, admin.name, reason);
 
     return NextResponse.json({
       success: true,

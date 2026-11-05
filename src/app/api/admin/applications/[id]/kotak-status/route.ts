@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminAuth } from '@/lib/auth';
-import { updateKotakAccountStatus } from '@/lib/db';
+import { updateKotakAccountStatusAsync } from '@/lib/db';
 import { KotakAccountStatus } from '@/types';
 
 const VALID_KOTAK_STATUSES: KotakAccountStatus[] = [
@@ -23,7 +23,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { status, note } = body;
+    const { status } = body;
 
     if (!status || !VALID_KOTAK_STATUSES.includes(status)) {
       return NextResponse.json(
@@ -32,7 +32,7 @@ export async function PATCH(
       );
     }
 
-    const updated = updateKotakAccountStatus(id, status, admin.name, note);
+    const updated = await updateKotakAccountStatusAsync(id, status, admin.name);
 
     return NextResponse.json({
       success: true,

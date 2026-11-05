@@ -602,18 +602,47 @@
 
 @media (max-width: 768px) {
   .section {
-    padding: 32px 16px;
+    padding: 24px 12px 48px;
   }
   .wizardHeader, .formBody, .wizardFooter {
-    padding: 20px 16px;
+    padding: 20px 14px;
   }
   .formGrid, .selectCardGroup {
     grid-template-columns: 1fr;
+    gap: 14px;
   }
   .stepper {
     overflow-x: auto;
+    padding-bottom: 6px;
   }
   .stepLabel {
     display: none;
+  }
+  .stepCircle {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  .wizardFooter {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+  .backBtn, .nextBtn, .submitBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .headerTitle {
+    font-size: 18px;
+  }
+  .headerSubtitle {
+    font-size: 13px;
+  }
+  .stepper::before {
+    left: 14px;
+    right: 14px;
   }
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminAuth } from '@/lib/auth';
-import { getApplicationDetailById } from '@/lib/db';
+import { getApplicationDetailByIdAsync } from '@/lib/db';
 
 export async function GET(
   req: NextRequest,
@@ -13,7 +13,7 @@ export async function GET(
 
   try {
     const { id } = await params;
-    const detail = getApplicationDetailById(id);
+    const detail = await getApplicationDetailByIdAsync(id);
 
     if (!detail) {
       return NextResponse.json({ error: 'Application not found.' }, { status: 404 });

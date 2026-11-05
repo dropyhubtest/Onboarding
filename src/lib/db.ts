@@ -9,24 +9,34 @@ import type {
   ApplicationStatus,
   KotakAccountStatus,
 } from '@/types';
-import { syncApplicationToNeon, syncDocumentToNeon } from './neon';
+import {
+  syncApplicationToNeon,
+  syncDocumentToNeon,
+  listApplicationsFromNeon,
+  getApplicationDetailFromNeon,
+  updateApplicationStatusInNeon,
+  updateKotakStatusInNeon,
+} from './neon';
 
 const DB_DIR = path.join(process.cwd(), 'data');
 const DB_PATH = process.env.DATABASE_PATH
   ? path.resolve(process.env.DATABASE_PATH)
   : path.join(DB_DIR, 'onboarding.db');
 
-// Ensure database directory exists
-if (!fs.existsSync(DB_DIR)) {
-  fs.mkdirSync(DB_DIR, { recursive: true });
-}
-
 let dbInstance: DatabaseSync | null = null;
 
-export function getDb(): DatabaseSync {
+export function getDb(): DatabaseSync | null {
   if (!dbInstance) {
-    dbInstance = new DatabaseSync(DB_PATH);
-    initializeSchema(dbInstance);
+    try {
+      if (!fs.existsSync(DB_DIR)) {
+        fs.mkdirSync(DB_DIR, { recursive: true });
+      }
+      dbInstance = new DatabaseSync(DB_PATH);
+      initializeSchema(dbInstance);
+    } catch (err) {
+      // Graceful fallback to Neon in serverless / read-only disk
+      return null;
+    }
   }
   return dbInstance;
 }
@@ -147,90 +157,96 @@ export function saveApplicationRecord(
   const reference = generateApplicationReference();
   const now = new Date().toISOString();
 
-  // Insert application
-  const stmt = db.prepare(`
-    INSERT INTO delivery_partner_applications (
-      id, application_reference, full_name, date_of_birth, gender,
-      mobile_number, alternate_mobile_number, email, address, city,
-      state, pincode, aadhaar_number, pan_number, delivery_categories, work_type, preferred_working_hours,
-      preferred_delivery_location, preferred_service_area, employment_status,
-      owns_two_wheeler, has_driving_license, has_vehicle_registration, has_smartphone,
-      kotak_account_status, application_status, privacy_consent, kotak_acknowledgement,
-      document_processing_status, internal_notes, rejection_reason, submitted_at, updated_at
-    ) VALUES (
-      ?, ?, ?, ?, ?,
-      ?, ?, ?, ?, ?,
-      ?, ?, ?, ?, ?, ?, ?,
-      ?, ?, ?,
-      ?, ?, ?, ?,
-      ?, ?, ?, ?,
-      ?, ?, ?, ?, ?
-    )
-  `);
+  if (db) {
+    try {
+      // Insert application
+      const stmt = db.prepare(`
+        INSERT INTO delivery_partner_applications (
+          id, application_reference, full_name, date_of_birth, gender,
+          mobile_number, alternate_mobile_number, email, address, city,
+          state, pincode, aadhaar_number, pan_number, delivery_categories, work_type, preferred_working_hours,
+          preferred_delivery_location, preferred_service_area, employment_status,
+          owns_two_wheeler, has_driving_license, has_vehicle_registration, has_smartphone,
+          kotak_account_status, application_status, privacy_consent, kotak_acknowledgement,
+          document_processing_status, internal_notes, rejection_reason, submitted_at, updated_at
+        ) VALUES (
+          ?, ?, ?, ?, ?,
+          ?, ?, ?, ?, ?,
+          ?, ?, ?, ?, ?, ?, ?,
+          ?, ?, ?,
+          ?, ?, ?, ?,
+          ?, ?, ?, ?,
+          ?, ?, ?, ?, ?
+        )
+      `);
 
-  stmt.run(
-    id,
-    reference,
-    app.full_name,
-    app.date_of_birth,
-    app.gender || '',
-    app.mobile_number,
-    app.alternate_mobile_number || '',
-    app.email,
-    app.address,
-    app.city,
-    app.state,
-    app.pincode,
-    app.aadhaar_number || '',
-    app.pan_number || '',
-    JSON.stringify(app.delivery_categories),
-    app.work_type,
-    app.preferred_working_hours,
-    app.preferred_delivery_location,
-    app.preferred_service_area,
-    app.employment_status || '',
-    app.owns_two_wheeler ? 1 : 0,
-    app.has_driving_license ? 1 : 0,
-    app.has_vehicle_registration ? 1 : 0,
-    app.has_smartphone ? 1 : 0,
-    app.kotak_account_status || 'Pending',
-    app.application_status || 'Pending Review',
-    app.privacy_consent ? 1 : 0,
-    app.kotak_acknowledgement ? 1 : 0,
-    app.document_processing_status || 'Uploaded',
-    app.internal_notes || '',
-    app.rejection_reason || '',
-    now,
-    now
-  );
+      stmt.run(
+        id,
+        reference,
+        app.full_name,
+        app.date_of_birth,
+        app.gender || '',
+        app.mobile_number,
+        app.alternate_mobile_number || '',
+        app.email,
+        app.address,
+        app.city,
+        app.state,
+        app.pincode,
+        app.aadhaar_number || '',
+        app.pan_number || '',
+        JSON.stringify(app.delivery_categories),
+        app.work_type,
+        app.preferred_working_hours,
+        app.preferred_delivery_location,
+        app.preferred_service_area,
+        app.employment_status || '',
+        app.owns_two_wheeler ? 1 : 0,
+        app.has_driving_license ? 1 : 0,
+        app.has_vehicle_registration ? 1 : 0,
+        app.has_smartphone ? 1 : 0,
+        app.kotak_account_status || 'Pending',
+        app.application_status || 'Pending Review',
+        app.privacy_consent ? 1 : 0,
+        app.kotak_acknowledgement ? 1 : 0,
+        app.document_processing_status || 'Uploaded',
+        app.internal_notes || '',
+        app.rejection_reason || '',
+        now,
+        now
+      );
 
-  // Link uploaded documents
-  const linkDocStmt = db.prepare(`
-    UPDATE delivery_partner_documents
-    SET application_id = ?
-    WHERE id = ?
-  `);
+      // Link uploaded documents
+      const linkDocStmt = db.prepare(`
+        UPDATE delivery_partner_documents
+        SET application_id = ?
+        WHERE id = ?
+      `);
 
-  if (aadhaarDocId) linkDocStmt.run(id, aadhaarDocId);
-  if (panDocId) linkDocStmt.run(id, panDocId);
+      if (aadhaarDocId) linkDocStmt.run(id, aadhaarDocId);
+      if (panDocId) linkDocStmt.run(id, panDocId);
 
-  // Add initial history entry
-  const historyStmt = db.prepare(`
-    INSERT INTO delivery_partner_status_history (
-      id, application_id, change_type, previous_status, new_status, changed_by, reason_or_note, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `);
+      // Add initial history entry
+      const historyStmt = db.prepare(`
+        INSERT INTO delivery_partner_status_history (
+          id, application_id, change_type, previous_status, new_status, changed_by, reason_or_note, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
 
-  historyStmt.run(
-    `hist_${Date.now()}_1`,
-    id,
-    'APPLICATION_STATUS',
-    '',
-    'Pending Review',
-    'System (Application Submission)',
-    'Application submitted by candidate with mandatory documents and Kotak acknowledgement.',
-    now
-  );
+      historyStmt.run(
+        `hist_${Date.now()}_1`,
+        id,
+        'APPLICATION_STATUS',
+        '',
+        'Pending Review',
+        'System (Application Submission)',
+        'Application submitted by candidate with mandatory documents and Kotak acknowledgement.',
+        now
+      );
+    } catch (sqliteErr) {
+      console.warn('Local SQLite write error (persisting to Neon):', sqliteErr);
+    }
+  }
 
   const createdApp: DeliveryPartnerApplication = {
     ...app,
@@ -240,7 +256,9 @@ export function saveApplicationRecord(
     updated_at: now,
   };
 
-  syncApplicationToNeon(createdApp).catch(() => {});
+  syncApplicationToNeon(createdApp).catch((err) => {
+    console.warn('Neon syncApplication notice:', err);
+  });
 
   return createdApp;
 }
@@ -248,17 +266,23 @@ export function saveApplicationRecord(
 // Check for recent duplicate submission by mobile within last 24h
 export function checkDuplicateSubmission(mobileNumber: string): DeliveryPartnerApplication | null {
   const db = getDb();
-  const row = db
-    .prepare('SELECT * FROM delivery_partner_applications WHERE mobile_number = ? ORDER BY submitted_at DESC LIMIT 1')
-    .get(mobileNumber) as any;
+  if (!db) return null;
+  try {
+    const row = db
+      .prepare('SELECT * FROM delivery_partner_applications WHERE mobile_number = ? ORDER BY submitted_at DESC LIMIT 1')
+      .get(mobileNumber) as any;
 
-  if (!row) return null;
-  return formatApplicationRow(row);
+    if (!row) return null;
+    return formatApplicationRow(row);
+  } catch (e) {
+    return null;
+  }
 }
 
 // Retrieve single application by ID
 export function getApplicationDetailById(id: string): AdminApplicationDetail | null {
   const db = getDb();
+  if (!db) return null;
   const row = db.prepare('SELECT * FROM delivery_partner_applications WHERE id = ?').get(id) as any;
   if (!row) return null;
 
@@ -288,6 +312,7 @@ export function getApplicationForCandidate(reference: string, mobile: string): {
   updatedAt: string;
 } | null {
   const db = getDb();
+  if (!db) return null;
   const row = db
     .prepare(
       'SELECT application_reference, full_name, application_status, kotak_account_status, submitted_at, updated_at FROM delivery_partner_applications WHERE application_reference = ? AND mobile_number = ?'
@@ -320,7 +345,6 @@ export interface ApplicationFilterParams {
 }
 
 export function listApplications(params: ApplicationFilterParams) {
-  const db = getDb();
   const {
     search,
     status,
@@ -332,6 +356,17 @@ export function listApplications(params: ApplicationFilterParams) {
     page = 1,
     limit = 10,
   } = params;
+
+  const db = getDb();
+  if (!db) {
+    return {
+      applications: [],
+      total: 0,
+      page,
+      limit,
+      totalPages: 1,
+    };
+  }
 
   const whereClauses: string[] = [];
   const args: any[] = [];
@@ -393,6 +428,94 @@ export function listApplications(params: ApplicationFilterParams) {
   };
 }
 
+export async function listApplicationsAsync(params: ApplicationFilterParams) {
+  if (process.env.DATABASE_URL) {
+    try {
+      const neonRes = await listApplicationsFromNeon(params);
+      return neonRes;
+    } catch (neonErr: any) {
+      console.warn('Neon listApplications notice, attempting SQLite fallback:', neonErr?.message || neonErr);
+    }
+  }
+
+  const db = getDb();
+  if (db) {
+    try {
+      return listApplications(params);
+    } catch (e) {
+      console.warn('SQLite listApplications error:', e);
+    }
+  }
+
+  return { applications: [], total: 0, page: 1, limit: params.limit || 15, totalPages: 1 };
+}
+
+export async function getApplicationDetailByIdAsync(id: string): Promise<AdminApplicationDetail | null> {
+  if (process.env.DATABASE_URL) {
+    try {
+      const detail = await getApplicationDetailFromNeon(id);
+      if (detail) return detail;
+    } catch (neonErr: any) {
+      console.warn('Neon getApplicationDetail notice:', neonErr?.message || neonErr);
+    }
+  }
+
+  const db = getDb();
+  if (db) {
+    try {
+      return getApplicationDetailById(id);
+    } catch (e) {}
+  }
+  return null;
+}
+
+export async function updateApplicationStatusAsync(
+  id: string,
+  newStatus: ApplicationStatus,
+  adminName: string,
+  reasonOrNote?: string
+): Promise<AdminApplicationDetail | null> {
+  if (process.env.DATABASE_URL) {
+    try {
+      const updated = await updateApplicationStatusInNeon(id, newStatus, adminName, reasonOrNote);
+      if (updated) return updated;
+    } catch (e) {
+      console.warn('Neon updateApplicationStatus notice:', e);
+    }
+  }
+
+  const db = getDb();
+  if (db) {
+    try {
+      return updateApplicationStatus(id, newStatus, adminName, reasonOrNote);
+    } catch (e) {}
+  }
+  return null;
+}
+
+export async function updateKotakAccountStatusAsync(
+  id: string,
+  newStatus: KotakAccountStatus,
+  adminName: string
+): Promise<AdminApplicationDetail | null> {
+  if (process.env.DATABASE_URL) {
+    try {
+      const updated = await updateKotakStatusInNeon(id, newStatus, adminName);
+      if (updated) return updated;
+    } catch (e) {
+      console.warn('Neon updateKotakStatus notice:', e);
+    }
+  }
+
+  const db = getDb();
+  if (db) {
+    try {
+      return updateKotakAccountStatus(id, newStatus, adminName);
+    } catch (e) {}
+  }
+  return null;
+}
+
 // Update Application Status (e.g. Under Review, Approved, Rejected)
 export function updateApplicationStatus(
   id: string,
@@ -401,6 +524,7 @@ export function updateApplicationStatus(
   reasonOrNote?: string
 ) {
   const db = getDb();
+  if (!db) throw new Error('Database unavailable');
   const current = db.prepare('SELECT application_status FROM delivery_partner_applications WHERE id = ?').get(id) as any;
   if (!current) throw new Error('Application not found');
 
@@ -443,6 +567,7 @@ export function updateKotakAccountStatus(
   note?: string
 ) {
   const db = getDb();
+  if (!db) throw new Error('Database unavailable');
   const current = db.prepare('SELECT kotak_account_status FROM delivery_partner_applications WHERE id = ?').get(id) as any;
   if (!current) throw new Error('Application not found');
 
@@ -474,6 +599,7 @@ export function updateKotakAccountStatus(
 // Add Internal Administrative Note
 export function addAdminNote(id: string, note: string, adminName: string) {
   const db = getDb();
+  if (!db) throw new Error('Database unavailable');
   const current = db.prepare('SELECT internal_notes FROM delivery_partner_applications WHERE id = ?').get(id) as any;
   if (!current) throw new Error('Application not found');
 
@@ -509,22 +635,28 @@ export function addAdminNote(id: string, note: string, adminName: string) {
 // Document Management
 export function saveDocumentRecord(doc: Omit<ApplicationDocument, 'application_id'> & { application_id?: string }): ApplicationDocument {
   const db = getDb();
-  db.prepare(`
-    INSERT INTO delivery_partner_documents (
-      id, application_id, document_type, original_file_name, stored_file_name, file_path, file_size, mime_type, verification_status, uploaded_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    doc.id,
-    doc.application_id || null,
-    doc.document_type,
-    doc.original_file_name,
-    doc.stored_file_name,
-    doc.file_path,
-    doc.file_size,
-    doc.mime_type,
-    doc.verification_status || 'Unverified',
-    doc.uploaded_at
-  );
+  if (db) {
+    try {
+      db.prepare(`
+        INSERT INTO delivery_partner_documents (
+          id, application_id, document_type, original_file_name, stored_file_name, file_path, file_size, mime_type, verification_status, uploaded_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        doc.id,
+        doc.application_id || null,
+        doc.document_type,
+        doc.original_file_name,
+        doc.stored_file_name,
+        doc.file_path,
+        doc.file_size,
+        doc.mime_type,
+        doc.verification_status || 'Unverified',
+        doc.uploaded_at
+      );
+    } catch (e) {
+      console.warn('SQLite saveDocumentRecord notice:', e);
+    }
+  }
 
   const createdDoc: ApplicationDocument = {
     ...doc,
@@ -538,9 +670,14 @@ export function saveDocumentRecord(doc: Omit<ApplicationDocument, 'application_i
 
 export function getDocumentById(id: string): ApplicationDocument | null {
   const db = getDb();
-  const row = db.prepare('SELECT * FROM delivery_partner_documents WHERE id = ?').get(id) as any;
-  if (!row) return null;
-  return formatDocumentRow(row);
+  if (!db) return null;
+  try {
+    const row = db.prepare('SELECT * FROM delivery_partner_documents WHERE id = ?').get(id) as any;
+    if (!row) return null;
+    return formatDocumentRow(row);
+  } catch (e) {
+    return null;
+  }
 }
 
 export async function getDocumentByIdAsync(id: string): Promise<ApplicationDocument | null> {

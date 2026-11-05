@@ -193,11 +193,41 @@
   line-height: 1.55;
 }
 
+/* Mobile responsive */
 @media (max-width: 800px) {
   .section {
-    padding: 36px 18px;
+    padding: 32px 16px;
   }
   .cardsGrid {
     grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .categoryCard {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+  .categoryName {
+    font-size: 17px;
+  }
+  .cardDescription {
+    font-size: 13.5px;
+    margin-bottom: 16px;
+  }
+  .logoRow {
+    gap: 8px;
+  }
+  .logoBadge {
+    height: 44px;
+    padding: 6px 12px;
+    border-radius: 8px;
+  }
+  .badgeImg {
+    max-height: 26px;
+  }
+  .badgeImgBigBasket {
+    max-height: 18px;
+  }
+  .disclaimerBanner {
+    padding: 14px 16px;
   }
 }
