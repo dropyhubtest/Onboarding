@@ -26,7 +26,11 @@ export async function GET(
     const isDownload = req.nextUrl.searchParams.get('download') === 'true';
     const dispositionType = isDownload ? 'attachment' : 'inline';
 
-    const fileBuffer = await readDocumentFileAsync(docRecord.file_path, docRecord.stored_file_name);
+    const fileBuffer = await readDocumentFileAsync(
+      docRecord.file_path,
+      docRecord.stored_file_name,
+      docRecord.file_content
+    );
 
     // Stream document securely to authorized administrator
     return new NextResponse(new Uint8Array(fileBuffer), {

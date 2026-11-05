@@ -12,6 +12,7 @@ import type {
 import {
   syncApplicationToNeon,
   syncDocumentToNeon,
+  getDocumentByIdFromNeon,
   listApplicationsFromNeon,
   getApplicationDetailFromNeon,
   updateApplicationStatusInNeon,
@@ -634,36 +635,83 @@ export function addAdminNote(id: string, note: string, adminName: string) {
 
 // Document Management
 export function saveDocumentRecord(doc: Omit<ApplicationDocument, 'application_id'> & { application_id?: string }): ApplicationDocument {
+  const createdDoc: ApplicationDocument = {
+    ...doc,
+    application_id: doc.application_id || '',
+  };
+
   const db = getDb();
   if (db) {
     try {
       db.prepare(`
         INSERT INTO delivery_partner_documents (
-          id, application_id, document_type, original_file_name, stored_file_name, file_path, file_size, mime_type, verification_status, uploaded_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          id, application_id, document_type, original_file_name, stored_file_name, file_path, file_size, mime_type, file_content, verification_status, uploaded_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
-        doc.id,
-        doc.application_id || null,
-        doc.document_type,
-        doc.original_file_name,
-        doc.stored_file_name,
-        doc.file_path,
-        doc.file_size,
-        doc.mime_type,
-        doc.verification_status || 'Unverified',
-        doc.uploaded_at
+        createdDoc.id,
+        createdDoc.application_id || null,
+        createdDoc.document_type,
+        createdDoc.original_file_name,
+        createdDoc.stored_file_name,
+        createdDoc.file_path,
+        createdDoc.file_size,
+        createdDoc.mime_type,
+        createdDoc.file_content || '',
+        createdDoc.verification_status || 'Unverified',
+        createdDoc.uploaded_at
       );
     } catch (e) {
       console.warn('SQLite saveDocumentRecord notice:', e);
     }
   }
 
+  syncDocumentToNeon(createdDoc).catch(() => {});
+
+  return createdDoc;
+}
+
+export async function saveDocumentRecordAsync(
+  doc: Omit<ApplicationDocument, 'application_id'> & { application_id?: string }
+): Promise<ApplicationDocument> {
   const createdDoc: ApplicationDocument = {
     ...doc,
     application_id: doc.application_id || '',
   };
 
-  syncDocumentToNeon(createdDoc).catch(() => {});
+  // 1. Direct Cloud Persistence to Neon Postgres (Primary, 100% durable on serverless)
+  if (process.env.DATABASE_URL) {
+    try {
+      await syncDocumentToNeon(createdDoc);
+    } catch (neonErr) {
+      console.warn('Neon syncDocument notice:', neonErr);
+    }
+  }
+
+  // 2. Local SQLite Persistence if available
+  const db = getDb();
+  if (db) {
+    try {
+      db.prepare(`
+        INSERT INTO delivery_partner_documents (
+          id, application_id, document_type, original_file_name, stored_file_name, file_path, file_size, mime_type, file_content, verification_status, uploaded_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        createdDoc.id,
+        createdDoc.application_id || null,
+        createdDoc.document_type,
+        createdDoc.original_file_name,
+        createdDoc.stored_file_name,
+        createdDoc.file_path,
+        createdDoc.file_size,
+        createdDoc.mime_type,
+        createdDoc.file_content || '',
+        createdDoc.verification_status || 'Unverified',
+        createdDoc.uploaded_at
+      );
+    } catch (e) {
+      // Safe fallback on read-only environments
+    }
+  }
 
   return createdDoc;
 }
@@ -681,21 +729,18 @@ export function getDocumentById(id: string): ApplicationDocument | null {
 }
 
 export async function getDocumentByIdAsync(id: string): Promise<ApplicationDocument | null> {
-  const localDoc = getDocumentById(id);
-  if (localDoc) return localDoc;
-
   if (process.env.DATABASE_URL) {
     try {
-      const { neon } = await import('@neondatabase/serverless');
-      const sql = neon(process.env.DATABASE_URL);
-      const rows = await sql`SELECT * FROM delivery_partner_documents WHERE id = ${id}`;
-      if (rows && rows.length > 0) {
-        return formatDocumentRow(rows[0]);
-      }
+      const neonDoc = await getDocumentByIdFromNeon(id);
+      if (neonDoc) return neonDoc;
     } catch (e) {
       console.warn('Neon getDocumentByIdAsync notice:', e);
     }
   }
+
+  const localDoc = getDocumentById(id);
+  if (localDoc) return localDoc;
+
   return null;
 }
 
@@ -753,8 +798,9 @@ function formatDocumentRow(row: any): ApplicationDocument {
     original_file_name: row.original_file_name,
     stored_file_name: row.stored_file_name,
     file_path: row.file_path,
-    file_size: row.file_size,
+    file_size: Number(row.file_size),
     mime_type: row.mime_type,
+    file_content: row.file_content || '',
     verification_status: row.verification_status,
     uploaded_at: row.uploaded_at,
   };

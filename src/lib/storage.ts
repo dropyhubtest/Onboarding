@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import crypto from 'crypto';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 
@@ -12,13 +13,34 @@ const ALLOWED_MIME_TYPES = [
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
-const STORAGE_DIR = process.env.DOCUMENTS_STORAGE_PATH
-  ? path.resolve(process.env.DOCUMENTS_STORAGE_PATH)
-  : path.join(process.cwd(), 'data', 'secure_documents');
+function getSafeStorageDir(): string {
+  if (process.env.DOCUMENTS_STORAGE_PATH) {
+    try {
+      const p = path.resolve(process.env.DOCUMENTS_STORAGE_PATH);
+      if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
+      return p;
+    } catch {
+      // Fallback below
+    }
+  }
 
-// Ensure secure storage directory exists
-if (!fs.existsSync(STORAGE_DIR)) {
-  fs.mkdirSync(STORAGE_DIR, { recursive: true });
+  // Preferred project folder for local development
+  const preferred = path.join(process.cwd(), 'data', 'secure_documents');
+  try {
+    if (!fs.existsSync(preferred)) {
+      fs.mkdirSync(preferred, { recursive: true });
+    }
+    return preferred;
+  } catch {
+    // In serverless / read-only filesystems (e.g. Vercel), use writable os.tmpdir()
+    const tmpDir = path.join(os.tmpdir(), 'dropyhub_documents');
+    try {
+      if (!fs.existsSync(tmpDir)) {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      }
+    } catch {}
+    return tmpDir;
+  }
 }
 
 const NEON_BUCKET = process.env.NEON_OBJECT_STORAGE_BUCKET || 'assets';
@@ -49,6 +71,7 @@ export interface StoredFileInfo {
   filePath: string;
   fileSize: number;
   mimeType: string;
+  base64Content: string;
 }
 
 export function validateDocumentFile(file: { name: string; size: number; type: string }): {
@@ -90,24 +113,32 @@ export async function saveDocumentBuffer(
   const ext = path.extname(originalName).toLowerCase() || (mimeType === 'application/pdf' ? '.pdf' : '.jpg');
   // Obfuscate disk filename completely to prevent guessing
   const storedFileName = `${docType}_${documentId}${ext}`;
-  const filePath = path.join(STORAGE_DIR, storedFileName);
+  const storageDir = getSafeStorageDir();
+  const filePath = path.join(storageDir, storedFileName);
+  const base64Content = buffer.toString('base64');
 
-  // 1. Write to local storage
-  await fs.promises.writeFile(filePath, buffer);
+  // 1. Safe write to disk (never throws on read-only environments)
+  try {
+    await fs.promises.writeFile(filePath, buffer);
+  } catch (diskErr: any) {
+    console.warn('Local disk write skipped in serverless environment:', diskErr?.message || diskErr);
+  }
 
-  // 2. Upload to Neon Object Storage in background
+  // 2. Upload to Neon Object Storage if S3 credentials are configured
   const s3 = getNeonS3Client();
   if (s3) {
-    s3.send(
-      new PutObjectCommand({
-        Bucket: NEON_BUCKET,
-        Key: `documents/${storedFileName}`,
-        Body: buffer,
-        ContentType: mimeType,
-      })
-    ).catch((err) => {
-      console.warn('Neon Object Storage upload notice:', err?.message || err);
-    });
+    try {
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: NEON_BUCKET,
+          Key: `documents/${storedFileName}`,
+          Body: buffer,
+          ContentType: mimeType,
+        })
+      );
+    } catch (s3Err: any) {
+      console.warn('Neon Object Storage upload skipped:', s3Err?.message || s3Err);
+    }
   }
 
   return {
@@ -117,10 +148,21 @@ export async function saveDocumentBuffer(
     filePath,
     fileSize: buffer.length,
     mimeType,
+    base64Content,
   };
 }
 
-export async function readDocumentFileAsync(filePath: string, storedFileName?: string): Promise<Buffer> {
+export async function readDocumentFileAsync(
+  filePath: string,
+  storedFileName?: string,
+  fileContentBase64?: string
+): Promise<Buffer> {
+  // 1. Primary Cloud Durability: If document is stored in Neon Postgres as base64, decode directly
+  if (fileContentBase64 && fileContentBase64.trim().length > 0) {
+    return Buffer.from(fileContentBase64, 'base64');
+  }
+
+  // 2. Neon Object Storage (S3)
   const s3 = getNeonS3Client();
   if (s3 && storedFileName) {
     try {
@@ -139,10 +181,12 @@ export async function readDocumentFileAsync(filePath: string, storedFileName?: s
     }
   }
 
-  if (!fs.existsSync(filePath)) {
-    throw new Error('Document file not found');
+  // 3. Local disk cache
+  if (fs.existsSync(filePath)) {
+    return fs.promises.readFile(filePath);
   }
-  return fs.promises.readFile(filePath);
+
+  throw new Error('Document binary file is not available in cloud database, S3, or local storage.');
 }
 
 export function readDocumentFile(filePath: string): Buffer {

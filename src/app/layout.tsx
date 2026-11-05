@@ -16,6 +16,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Auto-recover if a stale tab attempts to load chunks from an overwritten build
+              window.addEventListener('error', function(event) {
+                if (event && event.message && (
+                  event.message.indexOf('Loading chunk') !== -1 ||
+                  event.message.indexOf('ChunkLoadError') !== -1
+                )) {
+                  console.warn('Stale build chunk detected. Reloading to latest version...');
+                  window.location.reload();
+                }
+              });
+            `,
+          }}
+        />
+      </head>
       <body>
         <Navbar />
         <main style={{ flex: 1 }}>{children}</main>

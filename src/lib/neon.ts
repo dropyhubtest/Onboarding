@@ -66,9 +66,15 @@ export async function initNeonPostgresSchema(): Promise<void> {
         file_path TEXT NOT NULL,
         file_size INTEGER NOT NULL,
         mime_type TEXT NOT NULL,
+        file_content TEXT,
         verification_status TEXT NOT NULL DEFAULT 'Unverified',
         uploaded_at TEXT NOT NULL
       );
+    `);
+
+    // Ensure file_content column exists if table was created previously
+    await sql.query(`
+      ALTER TABLE delivery_partner_documents ADD COLUMN IF NOT EXISTS file_content TEXT;
     `);
 
     await sql.query(`
@@ -234,10 +240,11 @@ export async function syncDocumentToNeon(doc: ApplicationDocument): Promise<void
     await sql.query(
       `INSERT INTO delivery_partner_documents (
         id, application_id, document_type, original_file_name, stored_file_name,
-        file_path, file_size, mime_type, verification_status, uploaded_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        file_path, file_size, mime_type, file_content, verification_status, uploaded_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       ON CONFLICT (id) DO UPDATE SET
-        application_id = EXCLUDED.application_id,
+        application_id = CASE WHEN EXCLUDED.application_id <> '' THEN EXCLUDED.application_id ELSE delivery_partner_documents.application_id END,
+        file_content = CASE WHEN EXCLUDED.file_content IS NOT NULL AND EXCLUDED.file_content <> '' THEN EXCLUDED.file_content ELSE delivery_partner_documents.file_content END,
         verification_status = EXCLUDED.verification_status
       `,
       [
@@ -249,12 +256,41 @@ export async function syncDocumentToNeon(doc: ApplicationDocument): Promise<void
         doc.file_path,
         doc.file_size,
         doc.mime_type,
+        doc.file_content || '',
         doc.verification_status || 'Unverified',
         doc.uploaded_at,
       ]
     );
   } catch (err) {
     console.warn('Neon Postgres document sync error:', err);
+  }
+}
+
+export async function getDocumentByIdFromNeon(id: string): Promise<ApplicationDocument | null> {
+  const sql = getNeonSql();
+  if (!sql) return null;
+
+  try {
+    await initNeonPostgresSchema();
+    const rows = await sql.query('SELECT * FROM delivery_partner_documents WHERE id = $1 LIMIT 1', [id]);
+    if (!rows || rows.length === 0) return null;
+    const doc = rows[0];
+    return {
+      id: doc.id,
+      application_id: doc.application_id || '',
+      document_type: doc.document_type,
+      original_file_name: doc.original_file_name,
+      stored_file_name: doc.stored_file_name,
+      file_path: doc.file_path,
+      file_size: Number(doc.file_size),
+      mime_type: doc.mime_type,
+      file_content: doc.file_content || '',
+      verification_status: doc.verification_status,
+      uploaded_at: doc.uploaded_at,
+    };
+  } catch (err) {
+    console.warn('Neon getDocumentByIdFromNeon notice:', err);
+    return null;
   }
 }
 
@@ -413,6 +449,7 @@ export async function getApplicationDetailFromNeon(id: string): Promise<AdminApp
       file_path: doc.file_path,
       file_size: Number(doc.file_size),
       mime_type: doc.mime_type,
+      file_content: doc.file_content || '',
       verification_status: doc.verification_status,
       uploaded_at: doc.uploaded_at,
     })),

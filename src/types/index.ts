@@ -69,6 +69,7 @@ export interface ApplicationDocument {
   file_path: string;
   file_size: number;
   mime_type: string;
+  file_content?: string; // Base64 encoded binary content for resilient cloud storage
   verification_status: 'Unverified' | 'Verified' | 'Flagged';
   uploaded_at: string;
 }

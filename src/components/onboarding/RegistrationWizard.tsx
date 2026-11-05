@@ -422,7 +422,8 @@ export default function RegistrationWizard() {
         // Fallback gracefully if blocked by browser popup protection
       }
 
-      router.push(`/confirmation?${queryParams.toString()}`);
+      // Hard navigation ensures fresh bundle manifest and completely avoids ChunkLoadError on redeployment
+      window.location.assign(`/confirmation?${queryParams.toString()}`);
     } catch (err: any) {
       setGeneralError(err.message || 'An error occurred while submitting your application.');
       setIsSubmitting(false);

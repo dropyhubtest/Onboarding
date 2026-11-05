@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateDocumentFile, saveDocumentBuffer } from '@/lib/storage';
-import { saveDocumentRecord } from '@/lib/db';
+import { saveDocumentRecordAsync } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
       documentType as 'aadhaar' | 'pan'
     );
 
-    // Persist document record in SQLite
-    const docRecord = saveDocumentRecord({
+    // Persist document record to Neon Postgres & local DB - fully awaited for serverless
+    const docRecord = await saveDocumentRecordAsync({
       id: storedInfo.documentId,
       document_type: documentType as 'aadhaar' | 'pan',
       original_file_name: storedInfo.originalFileName,
@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
       file_path: storedInfo.filePath,
       file_size: storedInfo.fileSize,
       mime_type: storedInfo.mimeType,
+      file_content: storedInfo.base64Content,
       verification_status: 'Unverified',
       uploaded_at: new Date().toISOString(),
     });
