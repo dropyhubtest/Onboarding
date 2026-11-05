@@ -21,15 +21,15 @@ export default function HomePage() {
       <DeliveryCategoriesShowcase />
 
       {/* Process Section */}
-      <section style={{ padding: '48px 32px', maxWidth: 'var(--max-width)', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--brand-blue)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+      <section style={{ padding: 'clamp(28px, 5vw, 48px) clamp(14px, 4vw, 32px)', maxWidth: 'var(--max-width)', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--brand-blue)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             Structured 4-Step Process
           </span>
-          <h2 style={{ fontSize: 'clamp(1.6rem, 2.5vw, 2.1rem)', fontWeight: 800, color: 'var(--text-primary)', marginTop: 8 }}>
+          <h2 style={{ fontSize: 'clamp(1.4rem, 2.5vw, 2.1rem)', fontWeight: 800, color: 'var(--text-primary)', marginTop: 8 }}>
             How Your Onboarding Journey Works
           </h2>
-          <p style={{ fontSize: 14.5, color: 'var(--text-muted)', marginTop: 6 }}>
+          <p style={{ fontSize: 13.5, color: 'var(--text-muted)', marginTop: 6 }}>
             Direct, transparent process from application submission to first delivery.
           </p>
         </div>

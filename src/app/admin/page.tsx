@@ -12,8 +12,8 @@ export default function AdminPage() {
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
 
   // Login form state
-  const [emailInput, setEmailInput] = useState<string>('Partners@admin.com');
-  const [passwordInput, setPasswordInput] = useState<string>('Delivery#511');
+  const [emailInput, setEmailInput] = useState<string>('');
+  const [passwordInput, setPasswordInput] = useState<string>('');
   const [loginError, setLoginError] = useState<string>('');
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
 
@@ -345,7 +345,7 @@ export default function AdminPage() {
                 required
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
-                placeholder="Partners@admin.com"
+                placeholder="Enter authorized recruiter email"
                 className={styles.fieldInput}
                 autoComplete="email"
               />
@@ -358,7 +358,7 @@ export default function AdminPage() {
                 required
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
-                placeholder="Delivery#511"
+                placeholder="Enter your security password"
                 className={styles.fieldInput}
                 autoComplete="current-password"
               />
@@ -411,7 +411,7 @@ export default function AdminPage() {
         <div className={styles.userControlGroup}>
           <div className={styles.userBadge}>
             <span className={styles.userDot} />
-            <span>Signed in: <strong>Partners@admin.com</strong></span>
+            <span>Signed in: <strong>Authorized Operations Lead</strong></span>
           </div>
 
           <button type="button" onClick={fetchApplications} className={styles.refreshBtn}>
@@ -519,6 +519,7 @@ export default function AdminPage() {
               <th>Delivery Tracks</th>
               <th>Work &amp; Vehicle</th>
               <th>Kotak 811 Banking</th>
+              <th>Aadhaar &amp; PAN Documents</th>
               <th>Application Status</th>
               <th>Applied Date</th>
               <th>Actions</th>
@@ -527,71 +528,139 @@ export default function AdminPage() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={8} className={styles.emptyState}>
+                <td colSpan={9} className={styles.emptyState}>
                   Loading candidate database...
                 </td>
               </tr>
             ) : applications.length === 0 ? (
               <tr>
-                <td colSpan={8} className={styles.emptyState}>
+                <td colSpan={9} className={styles.emptyState}>
                   No candidate records match your current criteria.
                 </td>
               </tr>
             ) : (
-              applications.map((app) => (
-                <tr key={app.id}>
-                  <td>
-                    <div className={styles.candidateCell}>
-                      <span className={styles.candidateName}>{app.full_name}</span>
-                      <span className={styles.refTag}>{app.application_reference}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div><strong>{app.mobile_number}</strong></div>
-                    <div style={{ fontSize: 11.5, color: '#64748b' }}>{app.email}</div>
-                    <div style={{ fontSize: 11, color: '#94a3b8' }}>{app.city}, {app.state}</div>
-                  </td>
-                  <td>
-                    {app.delivery_categories.map((c) => (
-                      <span key={c} className={styles.categoryTag}>
-                        {c === 'food_quick_commerce' ? 'Food & Quick' : 'Logistics'}
+              applications.map((app) => {
+                const aadhaarDoc = app.documents?.find((d) => d.document_type === 'aadhaar');
+                const panDoc = app.documents?.find((d) => d.document_type === 'pan');
+
+                return (
+                  <tr key={app.id}>
+                    <td>
+                      <div className={styles.candidateCell}>
+                        <span className={styles.candidateName}>{app.full_name}</span>
+                        <span className={styles.refTag}>{app.application_reference}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div><strong>{app.mobile_number}</strong></div>
+                      <div style={{ fontSize: 11.5, color: '#64748b' }}>{app.email}</div>
+                      <div style={{ fontSize: 11, color: '#94a3b8' }}>{app.city}, {app.state}</div>
+                    </td>
+                    <td>
+                      {app.delivery_categories.map((c) => (
+                        <span key={c} className={styles.categoryTag}>
+                          {c === 'food_quick_commerce' ? 'Food & Quick' : 'Logistics'}
+                        </span>
+                      ))}
+                    </td>
+                    <td>
+                      <div><strong>{app.work_type}</strong></div>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: app.owns_two_wheeler ? '#15803d' : '#b45309' }}>
+                        {app.owns_two_wheeler ? '✓ Owns Two-Wheeler' : '! Needs Fleet Bike'}
                       </span>
-                    ))}
-                  </td>
-                  <td>
-                    <div><strong>{app.work_type}</strong></div>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: app.owns_two_wheeler ? '#15803d' : '#b45309' }}>
-                      {app.owns_two_wheeler ? '✓ Owns Two-Wheeler' : '! Needs Fleet Bike'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={getKotakBadge(app.kotak_account_status)}>
-                      {app.kotak_account_status}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={getStatusBadge(app.application_status)}>{app.application_status}</span>
-                  </td>
-                  <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                    {new Date(app.submitted_at).toLocaleDateString('en-IN', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </td>
-                  <td>
-                    <div className={styles.actionBtnGroup}>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenDetail(app.id)}
-                        className={styles.viewBtn}
-                      >
-                        Inspect Details
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                    <td>
+                      <span className={getKotakBadge(app.kotak_account_status)}>
+                        {app.kotak_account_status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className={styles.tableDocsCell}>
+                        <div className={styles.tableDocRow}>
+                          <span className={styles.docTypeBadge}>Aadhaar</span>
+                          {aadhaarDoc ? (
+                            <div className={styles.tableDocActions}>
+                              <button
+                                type="button"
+                                onClick={() => handleViewDoc(aadhaarDoc.id)}
+                                className={styles.tableDocViewBtn}
+                                title="View candidate Aadhaar in new tab"
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                View
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadDoc(aadhaarDoc.id)}
+                                className={styles.tableDocDownloadBtn}
+                                title="Download candidate Aadhaar document"
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Download
+                              </button>
+                            </div>
+                          ) : (
+                            <span className={styles.tableDocMissing}>
+                              {app.aadhaar_number ? `No File (••••${app.aadhaar_number.replace(/\s+/g, '').slice(-4)})` : 'Not Attached'}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className={styles.tableDocRow}>
+                          <span className={styles.docTypeBadge}>PAN</span>
+                          {panDoc ? (
+                            <div className={styles.tableDocActions}>
+                              <button
+                                type="button"
+                                onClick={() => handleViewDoc(panDoc.id)}
+                                className={styles.tableDocViewBtn}
+                                title="View candidate PAN Card in new tab"
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                View
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadDoc(panDoc.id)}
+                                className={styles.tableDocDownloadBtn}
+                                title="Download candidate PAN Card"
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Download
+                              </button>
+                            </div>
+                          ) : (
+                            <span className={styles.tableDocMissing}>
+                              {app.pan_number ? `No File (${app.pan_number})` : 'Not Attached'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={getStatusBadge(app.application_status)}>{app.application_status}</span>
+                    </td>
+                    <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                      {new Date(app.submitted_at).toLocaleDateString('en-IN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </td>
+                    <td>
+                      <div className={styles.actionBtnGroup}>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDetail(app.id)}
+                          className={styles.viewBtn}
+                        >
+                          Inspect Details
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -740,47 +809,58 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <div className={styles.docsList}>
-                      {detailData.documents.map((doc) => (
-                        <div key={doc.id} className={styles.docItem}>
-                          <div>
-                            <div className={styles.docMetaTitle}>
-                              {doc.document_type} Document
+                    {detailData.documents && detailData.documents.length > 0 ? (
+                      <div className={styles.docsList}>
+                        {detailData.documents.map((doc) => (
+                          <div key={doc.id} className={styles.docItem}>
+                            <div>
+                              <div className={styles.docMetaTitle}>
+                                {doc.document_type.toUpperCase()} Card Document
+                              </div>
+                              <div className={styles.docMetaSub}>
+                                {doc.original_file_name} &bull; {(doc.file_size / 1024).toFixed(0)} KB &bull; {doc.verification_status}
+                              </div>
                             </div>
-                            <div className={styles.docMetaSub}>
-                              {doc.original_file_name} &bull; {(doc.file_size / 1024).toFixed(0)} KB
+                            <div className={styles.docButtons}>
+                              <button
+                                type="button"
+                                onClick={() => handleViewDoc(doc.id)}
+                                className={styles.docViewBtn}
+                                title="Open document in new browser tab"
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
+                                  <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                View Document
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadDoc(doc.id)}
+                                className={styles.docDownloadBtn}
+                                title="Download document file directly"
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                  <polyline points="7 10 12 15 17 10" />
+                                  <line x1="12" y1="15" x2="12" y2="3" />
+                                </svg>
+                                Download
+                              </button>
                             </div>
                           </div>
-                          <div className={styles.docButtons}>
-                            <button
-                              type="button"
-                              onClick={() => handleViewDoc(doc.id)}
-                              className={styles.docViewBtn}
-                              title="Open document in new browser tab"
-                            >
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                              </svg>
-                              View
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDownloadDoc(doc.id)}
-                              className={styles.docDownloadBtn}
-                              title="Download document file directly"
-                            >
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="7 10 12 15 17 10" />
-                                <line x1="12" y1="15" x2="12" y2="3" />
-                              </svg>
-                              Download
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className={styles.emptyDocsCard}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="8" x2="12" y2="12" />
+                          <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        <span>No physical Aadhaar or PAN files attached to this candidate record during submission.</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* 4. Recruiter Decision & Kotak 811 Status */}

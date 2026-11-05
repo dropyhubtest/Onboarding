@@ -256,7 +256,7 @@ export function saveApplicationRecord(
     updated_at: now,
   };
 
-  syncApplicationToNeon(createdApp).catch((err) => {
+  syncApplicationToNeon(createdApp, aadhaarDocId, panDocId).catch((err) => {
     console.warn('Neon syncApplication notice:', err);
   });
 

@@ -231,3 +231,38 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 640px) {
+  .section {
+    padding: 36px 14px;
+  }
+  .header {
+    margin-bottom: 28px;
+  }
+  .title {
+    font-size: clamp(1.4rem, 5.5vw, 1.8rem);
+  }
+  .subtitle {
+    font-size: 13.5px;
+  }
+  .rateCard {
+    padding: 18px 16px;
+    border-radius: var(--radius-md);
+  }
+  .rateCardFeatured::before {
+    left: 16px;
+    font-size: 9px;
+    padding: 2px 8px;
+  }
+  .payoutMain {
+    font-size: 24px;
+  }
+  .surgeCard {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+  .surgeIcon {
+    width: 38px;
+    height: 38px;
+  }
+}

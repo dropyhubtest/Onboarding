@@ -59,12 +59,18 @@
 }
 
 @media (max-width: 640px) {
+  .container {
+    padding: 20px 14px 28px;
+  }
+  .logoGrid {
+    gap: 10px;
+  }
   .logoCard {
-    padding: 10px 16px;
-    height: 52px;
-    min-width: 90px;
+    padding: 8px 12px;
+    height: 48px;
+    min-width: 80px;
   }
   .logoImg {
-    max-height: 28px;
+    max-height: 24px;
   }
 }

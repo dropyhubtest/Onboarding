@@ -57,6 +57,7 @@ export interface DeliveryPartnerApplication {
   rejection_reason?: string;
   submitted_at: string;
   updated_at: string;
+  documents?: ApplicationDocument[];
 }
 
 export interface ApplicationDocument {

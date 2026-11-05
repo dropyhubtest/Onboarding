@@ -135,7 +135,11 @@ export function formatNeonApplicationRow(row: any): DeliveryPartnerApplication {
   };
 }
 
-export async function syncApplicationToNeon(app: DeliveryPartnerApplication): Promise<void> {
+export async function syncApplicationToNeon(
+  app: DeliveryPartnerApplication,
+  aadhaarDocId?: string,
+  panDocId?: string
+): Promise<void> {
   const sql = getNeonSql();
   if (!sql) return;
 
@@ -202,6 +206,20 @@ export async function syncApplicationToNeon(app: DeliveryPartnerApplication): Pr
         app.updated_at,
       ]
     );
+
+    // Link uploaded documents in Neon Postgres
+    if (aadhaarDocId) {
+      await sql.query(
+        'UPDATE delivery_partner_documents SET application_id = $1 WHERE id = $2',
+        [app.id, aadhaarDocId]
+      );
+    }
+    if (panDocId) {
+      await sql.query(
+        'UPDATE delivery_partner_documents SET application_id = $1 WHERE id = $2',
+        [app.id, panDocId]
+      );
+    }
   } catch (err) {
     console.warn('Neon Postgres sync error:', err);
   }
@@ -328,9 +346,43 @@ export async function listApplicationsFromNeon(params: ApplicationFilterParams) 
   `;
 
   const rows = await sql.query(querySql, args);
+  const appIds = rows.map((r: any) => r.id);
+
+  const docsMap: Record<string, ApplicationDocument[]> = {};
+  if (appIds.length > 0) {
+    try {
+      const docRows = await sql.query(
+        'SELECT * FROM delivery_partner_documents WHERE application_id = ANY($1)',
+        [appIds]
+      );
+      for (const d of docRows) {
+        if (!docsMap[d.application_id]) docsMap[d.application_id] = [];
+        docsMap[d.application_id].push({
+          id: d.id,
+          application_id: d.application_id,
+          document_type: d.document_type,
+          original_file_name: d.original_file_name,
+          stored_file_name: d.stored_file_name,
+          file_path: d.file_path,
+          file_size: Number(d.file_size),
+          mime_type: d.mime_type,
+          verification_status: d.verification_status,
+          uploaded_at: d.uploaded_at,
+        });
+      }
+    } catch (docErr) {
+      console.warn('Neon list documents fetch notice:', docErr);
+    }
+  }
+
+  const applications = rows.map((r: any) => {
+    const formatted = formatNeonApplicationRow(r);
+    formatted.documents = docsMap[formatted.id] || [];
+    return formatted;
+  });
 
   return {
-    applications: rows.map(formatNeonApplicationRow),
+    applications,
     total,
     page: safePage,
     limit: safeLimit,
