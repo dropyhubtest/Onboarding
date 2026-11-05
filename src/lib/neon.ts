@@ -520,3 +520,19 @@ export async function updateKotakStatusInNeon(
 
   return getApplicationDetailFromNeon(id);
 }
+
+export async function deleteApplicationInNeon(id: string): Promise<boolean> {
+  const sql = getNeonSql();
+  if (!sql) return false;
+
+  try {
+    await initNeonPostgresSchema();
+    await sql.query('DELETE FROM delivery_partner_status_history WHERE application_id = $1', [id]);
+    await sql.query('DELETE FROM delivery_partner_documents WHERE application_id = $1', [id]);
+    await sql.query('DELETE FROM delivery_partner_applications WHERE id = $1', [id]);
+    return true;
+  } catch (err) {
+    console.warn('Neon deleteApplication error:', err);
+    return false;
+  }
+}

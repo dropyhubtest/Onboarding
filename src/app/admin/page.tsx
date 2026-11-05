@@ -269,6 +269,43 @@ export default function AdminPage() {
     window.open(`/api/admin/documents/${docId}?adminKey=${encodeURIComponent(key)}&download=true`, '_blank');
   };
 
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+
+  const handleDeleteApplication = async (id: string, name: string, ref: string) => {
+    const key = adminToken || 'dropyhub_admin_secure_key_2026';
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete candidate "${name}" (${ref})?\n\nThis will remove all candidate profile details, documents, and records permanently.`
+    );
+    if (!confirmed) return;
+
+    setIsDeletingId(id);
+    try {
+      const res = await fetch(`/api/admin/applications/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-admin-key': key,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to delete application.');
+      }
+
+      // If detail modal is open for this application, close it
+      if (selectedAppId === id) {
+        setSelectedAppId(null);
+        setDetailData(null);
+      }
+
+      // Refresh applications list
+      await fetchApplications();
+    } catch (err: any) {
+      alert(err.message || 'Error deleting application.');
+    } finally {
+      setIsDeletingId(null);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Approved':
@@ -656,6 +693,23 @@ export default function AdminPage() {
                         >
                           Inspect Details
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteApplication(app.id, app.full_name, app.application_reference)}
+                          disabled={isDeletingId === app.id}
+                          className={styles.deleteBtn}
+                          title="Permanently delete candidate"
+                        >
+                          {isDeletingId === app.id ? 'Deleting...' : (
+                            <>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              </svg>
+                              Delete
+                            </>
+                          )}
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -925,6 +979,22 @@ export default function AdminPage() {
                         </button>
                       </div>
                     </div>
+                  </div>
+
+                  {/* 5. Danger Zone - Permanent Deletion */}
+                  <div style={{ marginTop: 24, paddingTop: 18, borderTop: '1px solid #fee2e2', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#b91c1c' }}>Permanent Deletion</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Permanently remove this candidate profile and verification documents.</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteApplication(detailData.id, detailData.full_name, detailData.application_reference)}
+                      disabled={isDeletingId === detailData.id}
+                      className={styles.deleteModalBtn}
+                    >
+                      {isDeletingId === detailData.id ? 'Deleting...' : 'Delete Candidate Record'}
+                    </button>
                   </div>
                 </div>
               </>

@@ -312,6 +312,13 @@
 }
 
 /* Document Upload Dropzones (Light Mode) */
+.documentsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  width: 100%;
+}
+
 .uploadZone {
   border: 2px dashed var(--border-strong);
   border-radius: var(--radius-md);
@@ -359,39 +366,57 @@
   background: var(--status-success-bg);
   border: 1px solid var(--status-success-border);
   border-radius: var(--radius-md);
-  padding: 14px 18px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .fileInfo {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .fileSuccessIcon {
   color: var(--status-success);
+  flex-shrink: 0;
 }
 
 .fileName {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .fileSize {
   font-size: 11.5px;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .replaceFileBtn {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   color: #dc2626;
   text-decoration: underline;
-  padding: 4px;
+  padding: 4px 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .securityConsentCard {
@@ -606,13 +631,21 @@
   }
   .wrapper {
     border-radius: 14px;
+    overflow-x: hidden;
   }
   .wizardHeader, .formBody, .wizardFooter {
     padding: 16px 12px;
+    overflow-x: hidden;
   }
-  .formGrid, .selectCardGroup {
-    grid-template-columns: 1fr;
-    gap: 12px;
+  .formGrid, .selectCardGroup, .documentsGrid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+  .documentsGrid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    width: 100% !important;
   }
   .inputField, .selectField {
     font-size: 16px; /* Prevents unwanted zoom in mobile browsers */

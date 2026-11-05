@@ -17,6 +17,7 @@ import {
   getApplicationDetailFromNeon,
   updateApplicationStatusInNeon,
   updateKotakStatusInNeon,
+  deleteApplicationInNeon,
 } from './neon';
 
 const DB_DIR = path.join(process.cwd(), 'data');
@@ -515,6 +516,35 @@ export async function updateKotakAccountStatusAsync(
     } catch (e) {}
   }
   return null;
+}
+
+export function deleteApplication(id: string): boolean {
+  const db = getDb();
+  if (db) {
+    try {
+      db.prepare('DELETE FROM delivery_partner_status_history WHERE application_id = ?').run(id);
+      db.prepare('DELETE FROM delivery_partner_documents WHERE application_id = ?').run(id);
+      db.prepare('DELETE FROM delivery_partner_applications WHERE id = ?').run(id);
+      return true;
+    } catch (e) {
+      console.warn('SQLite deleteApplication notice:', e);
+    }
+  }
+  return false;
+}
+
+export async function deleteApplicationAsync(id: string): Promise<boolean> {
+  let neonSuccess = false;
+  if (process.env.DATABASE_URL) {
+    try {
+      neonSuccess = await deleteApplicationInNeon(id);
+    } catch (e) {
+      console.warn('Neon deleteApplication notice:', e);
+    }
+  }
+
+  const sqliteSuccess = deleteApplication(id);
+  return neonSuccess || sqliteSuccess;
 }
 
 // Update Application Status (e.g. Under Review, Approved, Rejected)

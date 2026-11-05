@@ -1069,7 +1069,7 @@ export default function RegistrationWizard() {
                   </div>
                 )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <div className={styles.documentsGrid}>
                   {/* Aadhaar Card Section */}
                   <div>
                     <div className={styles.fieldGroup} style={{ marginBottom: 14 }}>

@@ -504,6 +504,49 @@
   border-color: var(--brand-primary);
 }
 
+.deleteBtn {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+.deleteBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.deleteModalBtn {
+  background: #fef2f2;
+  border: 1px solid #f87171;
+  color: #b91c1c;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.deleteModalBtn:hover:not(:disabled) {
+  background: #dc2626;
+  color: #ffffff;
+}
+
 .emptyState {
   text-align: center;
   padding: 56px 20px;
