@@ -41,28 +41,28 @@ export default function DeliveryCategoriesShowcase() {
           <div className={styles.platformTitle}>Representative Ecosystem Partners:</div>
           <div className={styles.logoRow}>
             <div className={styles.logoBadge} title="Swiggy">
-              <Image src="/assets/Home/swiggy.png" alt="Swiggy" width={70} height={22} unoptimized className={styles.badgeImg} />
+              <Image src="/assets/Home/swiggy.png" alt="Swiggy" width={96} height={34} unoptimized className={styles.badgeImg} />
             </div>
             <div className={styles.logoBadge} title="Zomato">
-              <Image src="/assets/Home/zomato.png" alt="Zomato" width={75} height={20} unoptimized className={styles.badgeImg} />
+              <Image src="/assets/Home/zomato.png" alt="Zomato" width={100} height={32} unoptimized className={styles.badgeImg} />
             </div>
             <div className={styles.logoBadge} title="Domino's Pizza">
-              <Image src="/assets/dominos.png" alt="Domino's Pizza" width={70} height={22} unoptimized className={styles.badgeImg} />
+              <Image src="/assets/dominos.png" alt="Domino's Pizza" width={96} height={34} unoptimized className={styles.badgeImg} />
             </div>
             <div className={styles.logoBadge} title="Pizza Hut">
-              <Image src="/assets/Pizzahut.png" alt="Pizza Hut" width={65} height={22} unoptimized className={styles.badgeImg} />
+              <Image src="/assets/Pizzahut.png" alt="Pizza Hut" width={90} height={34} unoptimized className={styles.badgeImg} />
             </div>
             <div className={styles.logoBadge} title="Blinkit">
-              <Image src="/assets/Home/blinkit.png" alt="Blinkit" width={65} height={20} unoptimized className={styles.badgeImg} />
+              <Image src="/assets/Home/blinkit.png" alt="Blinkit" width={90} height={32} unoptimized className={styles.badgeImg} />
             </div>
             <div className={styles.logoBadge} title="Zepto">
-              <Image src="/assets/Home/zepto.png" alt="Zepto" width={60} height={20} unoptimized className={styles.badgeImg} />
+              <Image src="/assets/Home/zepto.png" alt="Zepto" width={85} height={32} unoptimized className={styles.badgeImg} />
             </div>
             <div className={styles.logoBadge} title="BigBasket">
-              <Image src="/assets/Home/big_basket.png" alt="BigBasket" width={75} height={22} unoptimized className={styles.badgeImg} />
+              <Image src="/assets/Home/big_basket.png" alt="BigBasket" width={75} height={22} unoptimized className={styles.badgeImgBigBasket} />
             </div>
             <div className={styles.logoBadge} title="KFC">
-              <Image src="/assets/kfc.png" alt="KFC" width={45} height={20} unoptimized className={styles.badgeImg} />
+              <Image src="/assets/kfc.png" alt="KFC" width={72} height={34} unoptimized className={styles.badgeImg} />
             </div>
           </div>
 
@@ -106,16 +106,16 @@ export default function DeliveryCategoriesShowcase() {
           <div className={styles.platformTitle}>Representative Ecosystem Partners:</div>
           <div className={styles.logoRow}>
             <div className={styles.logoBadge} title="Apollo 24|7">
-              <Image src="/assets/apollo.png" alt="Apollo 24|7" width={75} height={22} unoptimized className={styles.badgeImg} />
+              <Image src="/assets/apollo.png" alt="Apollo 24|7" width={105} height={34} unoptimized className={styles.badgeImg} />
             </div>
             <div className={styles.logoBadge} title="Shadowfax">
-              <Image src="/assets/Home/shadowfax.png" alt="Shadowfax" width={78} height={22} unoptimized className={styles.badgeImg} />
+              <Image src="/assets/Home/shadowfax.png" alt="Shadowfax" width={110} height={34} unoptimized className={styles.badgeImg} />
             </div>
             <div className={styles.logoBadge} title="Paradise Biryani">
-              <Image src="/assets/Paradise.png" alt="Paradise Biryani" width={70} height={22} unoptimized className={styles.badgeImg} />
+              <Image src="/assets/Paradise.png" alt="Paradise Biryani" width={100} height={34} unoptimized className={styles.badgeImg} />
             </div>
             <div className={styles.logoBadge} title="BigBasket Logistics">
-              <Image src="/assets/Home/big_basket.png" alt="BigBasket" width={75} height={22} unoptimized className={styles.badgeImg} />
+              <Image src="/assets/Home/big_basket.png" alt="BigBasket" width={75} height={22} unoptimized className={styles.badgeImgBigBasket} />
             </div>
           </div>
 

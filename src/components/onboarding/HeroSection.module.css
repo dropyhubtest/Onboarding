@@ -1,11 +1,11 @@
 .hero {
   position: relative;
-  padding: 60px 32px 48px;
+  padding: 56px 32px 48px;
   max-width: var(--max-width);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.15fr 0.95fr;
-  align-items: center;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: start;
   gap: 52px;
 }
 
@@ -40,7 +40,7 @@
 
 .heading {
   font-family: var(--font-display);
-  font-size: clamp(2.4rem, 4vw, 3.4rem);
+  font-size: clamp(2.3rem, 3.8vw, 3.3rem);
   font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -56,7 +56,7 @@
   font-size: 15.5px;
   color: var(--text-secondary);
   line-height: 1.6;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
   max-width: 540px;
 }
 
@@ -144,7 +144,9 @@
 .ctaRow {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
 }
 
 .primaryBtn {
@@ -152,7 +154,7 @@
   font-weight: 700;
   color: #ffffff;
   background-color: var(--brand-primary);
-  padding: 13px 28px;
+  padding: 13px 26px;
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-sm);
   transition: all 0.15s ease;
@@ -169,171 +171,153 @@
   box-shadow: var(--shadow-md);
 }
 
+.secondaryBtn {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background-color: #ffffff;
+  border: 1.5px solid var(--border-default);
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.secondaryBtn:hover {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
+  background: #f8fafc;
+}
+
 .recruiterHint {
   font-size: 13px;
   color: var(--text-muted);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   font-weight: 600;
 }
 
-/* Visual Column */
+/* Rate Card Showcase - Right Column */
 .visualColumn {
   display: flex;
   flex-direction: column;
 }
 
-.heroImageCard {
+.rateCardContainer {
   background: #ffffff;
-  border: 1px solid var(--border-default);
+  border: 1.5px solid #e2e8f0;
   border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 18px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.09);
+  transition: box-shadow 0.25s ease;
 }
 
-.heroImageCard:hover {
-  box-shadow: 0 16px 44px rgba(15, 23, 42, 0.12);
+.rateCardContainer:hover {
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.14);
 }
 
-.imageWrapper {
-  position: relative;
-  width: 100%;
-  height: 280px;
-  background: #f1f5f9;
-  overflow: hidden;
+.rateCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 0 4px;
 }
 
-.heroImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 25%;
+.rateCardEyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--brand-blue);
   display: block;
 }
 
-.floatingEarningBadge {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(8px);
-  padding: 8px 14px;
-  border-radius: 10px;
-  color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.floatingEarningNum {
-  font-size: 15px;
+.rateCardTitle {
+  font-size: 17px;
   font-weight: 800;
-  color: #38bdf8;
-  line-height: 1.2;
+  color: var(--text-primary);
+  margin-top: 1px;
 }
 
-.floatingEarningSub {
-  font-size: 10.5px;
-  color: #cbd5e1;
-  font-weight: 500;
+.verifiedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
 }
 
-.floatingKotakBadge {
+.livePulseDot {
+  width: 7px;
+  height: 7px;
+  background: #16a34a;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* Complete Uncropped Image Wrapper */
+.imageCardWrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0f172a;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.fullRateCardImg {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.imageCardWrapper:hover .fullRateCardImg {
+  transform: scale(1.02);
+}
+
+.expandOverlayHint {
   position: absolute;
-  bottom: 16px;
-  right: 16px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
+  bottom: 12px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(6px);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
   padding: 6px 12px;
   border-radius: var(--radius-pill);
-  font-size: 11px;
-  font-weight: 700;
-  color: #ed1c24;
   display: flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(237, 28, 36, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: background 0.15s ease;
 }
 
-.floatingKotakDot {
-  width: 7px;
-  height: 7px;
-  background: #ed1c24;
-  border-radius: 50%;
+.imageCardWrapper:hover .expandOverlayHint {
+  background: rgba(37, 99, 235, 0.95);
 }
 
-.highlightCardBottom {
-  padding: 22px 24px;
-  background: #ffffff;
-}
-
-.earningsBox {
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  margin-bottom: 16px;
-}
-
-.earningsTopRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 10px;
-}
-
-.earningsLabel {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 3px;
-}
-
-.earningsValue {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--text-primary);
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.earningsUnit {
-  font-family: var(--font-family);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.hiringPill {
-  font-size: 10.5px;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: var(--status-success);
-  background: var(--status-success-bg);
-  border: 1px solid var(--status-success-border);
-  padding: 3px 9px;
-  border-radius: var(--radius-pill);
-}
-
-.earningsPerks {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 500;
-  border-top: 1px dashed var(--border-default);
-  padding-top: 8px;
-}
-
+/* Kotak Notice */
 .kotakNotice {
   background: var(--kotak-bg);
   border: 1px solid var(--kotak-border);
@@ -342,6 +326,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-top: 14px;
 }
 
 .kotakBadgeWrapper {
@@ -376,10 +361,87 @@
   line-height: 1.45;
 }
 
+/* Lightbox Modal */
+.lightboxOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.lightboxContent {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  max-width: 680px;
+  width: 100%;
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+}
+
+.lightboxHeader {
+  padding: 16px 20px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lightboxCloseBtn {
+  background: transparent;
+  border: none;
+  font-size: 26px;
+  color: #94a3b8;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.lightboxCloseBtn:hover {
+  color: #ffffff;
+  background: #334155;
+}
+
+.lightboxImageWrap {
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  background: #0f172a;
+}
+
+.lightboxImg {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.lightboxFooter {
+  padding: 14px 20px;
+  background: #1e293b;
+  border-top: 1px solid #334155;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 @media (max-width: 960px) {
   .hero {
     grid-template-columns: 1fr;
-    padding: 40px 20px;
+    padding: 36px 20px;
     gap: 36px;
   }
 }
@@ -392,10 +454,7 @@
     flex-direction: column;
     align-items: stretch;
   }
-  .primaryBtn {
+  .primaryBtn, .secondaryBtn {
     justify-content: center;
-  }
-  .imageWrapper {
-    height: 220px;
   }
 }

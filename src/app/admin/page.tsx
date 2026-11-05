@@ -1,12 +1,23 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import styles from './admin.module.css';
 import { DeliveryPartnerApplication, AdminApplicationDetail, ApplicationStatus, KotakAccountStatus } from '@/types';
 
 export default function AdminPage() {
-  const [adminKey, setAdminKey] = useState<string>('dropyhub_admin_secure_key_2026');
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  // Authentication states
+  const [adminToken, setAdminToken] = useState<string>('');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
+
+  // Login form state
+  const [emailInput, setEmailInput] = useState<string>('Partners@admin.com');
+  const [passwordInput, setPasswordInput] = useState<string>('Delivery#511');
+  const [loginError, setLoginError] = useState<string>('');
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+
+  // Application data states
   const [applications, setApplications] = useState<DeliveryPartnerApplication[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -26,14 +37,31 @@ export default function AdminPage() {
   const [rejectionReason, setRejectionReason] = useState<string>('');
   const [actionMessage, setActionMessage] = useState<string>('');
 
-  // Keep admin cookie synchronized for direct file streams & tab viewing
+  // Initial authentication check from cookie or stored session
   useEffect(() => {
-    if (adminKey) {
-      document.cookie = `admin_token=${encodeURIComponent(adminKey)}; path=/; max-age=86400; SameSite=Lax`;
-    }
-  }, [adminKey]);
+    const checkInitialAuth = async () => {
+      setIsCheckingAuth(true);
+      try {
+        const res = await fetch('/api/admin/applications?limit=1');
+        if (res.ok) {
+          setIsAuthenticated(true);
+          setAdminToken('dropyhub_admin_secure_key_2026');
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (e) {
+        setIsAuthenticated(false);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
 
+    checkInitialAuth();
+  }, []);
+
+  // Fetch applications when authenticated or filters change
   const fetchApplications = async () => {
+    if (!isAuthenticated) return;
     setIsLoading(true);
     setError('');
 
@@ -45,16 +73,11 @@ export default function AdminPage() {
       if (statusFilter !== 'ALL') params.set('status', statusFilter);
       if (kotakFilter !== 'ALL') params.set('kotakStatus', kotakFilter);
 
-      const res = await fetch(`/api/admin/applications?${params.toString()}`, {
-        headers: {
-          'x-admin-key': adminKey,
-          'x-admin-name': 'Recruiter',
-        },
-      });
+      const res = await fetch(`/api/admin/applications?${params.toString()}`);
 
       if (res.status === 401) {
         setIsAuthenticated(false);
-        throw new Error('Invalid or missing admin security passkey.');
+        throw new Error('Admin session expired. Please sign in again.');
       }
 
       const json = await res.json();
@@ -64,7 +87,6 @@ export default function AdminPage() {
 
       setApplications(json.applications || []);
       setTotalCount(json.total || 0);
-      setIsAuthenticated(true);
     } catch (err: any) {
       setError(err.message || 'Error loading applicant data.');
     } finally {
@@ -73,8 +95,54 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    fetchApplications();
-  }, [statusFilter, kotakFilter]);
+    if (isAuthenticated) {
+      fetchApplications();
+    }
+  }, [isAuthenticated, statusFilter, kotakFilter]);
+
+  // Handle Login
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    setIsLoggingIn(true);
+
+    try {
+      const res = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailInput.trim(),
+          password: passwordInput,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Authentication failed. Please check your credentials.');
+      }
+
+      setAdminToken(json.token || 'dropyhub_admin_secure_key_2026');
+      setIsAuthenticated(true);
+    } catch (err: any) {
+      setLoginError(err.message || 'Login failed.');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  // Handle Logout
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/auth/logout', { method: 'POST' });
+    } catch (e) {
+      // Ignore network errors on logout
+    }
+    setAdminToken('');
+    setIsAuthenticated(false);
+    setApplications([]);
+    setSelectedAppId(null);
+  };
 
   const handleOpenDetail = async (id: string) => {
     setSelectedAppId(id);
@@ -82,9 +150,7 @@ export default function AdminPage() {
     setActionMessage('');
 
     try {
-      const res = await fetch(`/api/admin/applications/${id}`, {
-        headers: { 'x-admin-key': adminKey },
-      });
+      const res = await fetch(`/api/admin/applications/${id}`);
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || 'Failed to load candidate.');
 
@@ -107,7 +173,6 @@ export default function AdminPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-key': adminKey,
           'x-admin-name': 'Recruitment Lead',
         },
         body: JSON.stringify({
@@ -135,7 +200,6 @@ export default function AdminPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-key': adminKey,
           'x-admin-name': 'Recruitment Lead',
         },
         body: JSON.stringify({
@@ -155,11 +219,13 @@ export default function AdminPage() {
   };
 
   const handleViewDoc = (docId: string) => {
-    window.open(`/api/admin/documents/${docId}?adminKey=${encodeURIComponent(adminKey)}`, '_blank');
+    const key = adminToken || 'dropyhub_admin_secure_key_2026';
+    window.open(`/api/admin/documents/${docId}?adminKey=${encodeURIComponent(key)}`, '_blank');
   };
 
   const handleDownloadDoc = (docId: string) => {
-    window.open(`/api/admin/documents/${docId}?adminKey=${encodeURIComponent(adminKey)}&download=true`, '_blank');
+    const key = adminToken || 'dropyhub_admin_secure_key_2026';
+    window.open(`/api/admin/documents/${docId}?adminKey=${encodeURIComponent(key)}&download=true`, '_blank');
   };
 
   const getStatusBadge = (status: string) => {
@@ -186,6 +252,99 @@ export default function AdminPage() {
     }
   };
 
+  // If loading session check
+  if (isCheckingAuth) {
+    return (
+      <div className={styles.loginWrapper}>
+        <div style={{ textAlign: 'center', color: '#64748b' }}>
+          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Verifying Admin Session...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // If NOT authenticated, show the Login Card!
+  if (!isAuthenticated) {
+    return (
+      <div className={styles.loginWrapper}>
+        <div className={styles.loginCard}>
+          <div className={styles.loginHeader}>
+            <div className={styles.loginLogoWrapper}>
+              <Image
+                src="/assets/Home/Dropyhub_logo.png"
+                alt="DropyHub Logo"
+                width={140}
+                height={40}
+                unoptimized
+                style={{ height: 'auto', objectFit: 'contain' }}
+              />
+            </div>
+            <h1 className={styles.loginTitle}>Recruiter Operations Console</h1>
+            <p className={styles.loginSubtitle}>
+              Sign in with authorized administrator credentials to review candidates, inspect documents, and manage Kotak 811 verification.
+            </p>
+          </div>
+
+          {loginError && (
+            <div className={styles.loginErrorMsg}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleLoginSubmit} className={styles.loginForm}>
+            <div className={styles.formField}>
+              <label className={styles.fieldLabel}>Recruiter Email</label>
+              <input
+                type="email"
+                required
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="Partners@admin.com"
+                className={styles.fieldInput}
+                autoComplete="email"
+              />
+            </div>
+
+            <div className={styles.formField}>
+              <label className={styles.fieldLabel}>Security Password</label>
+              <input
+                type="password"
+                required
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="Delivery#511"
+                className={styles.fieldInput}
+                autoComplete="current-password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              className={styles.loginSubmitBtn}
+            >
+              {isLoggingIn ? (
+                'Signing In...'
+              ) : (
+                <>
+                  <span>Sign In to Dashboard</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   // Metrics
   const totalApplicants = applications.length;
   const underReviewCount = applications.filter((a) => a.application_status === 'Under Review').length;
@@ -195,7 +354,7 @@ export default function AdminPage() {
 
   return (
     <div className={styles.adminContainer}>
-      {/* Top Header */}
+      {/* Top Header - No Passkey Box! */}
       <div className={styles.topHeader}>
         <div className={styles.titleArea}>
           <span className={styles.portalBadge}>Recruitment &amp; Operations Center</span>
@@ -208,15 +367,12 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className={styles.authGroup}>
-          <span className={styles.authLabel}>Passkey:</span>
-          <input
-            type="password"
-            value={adminKey}
-            onChange={(e) => setAdminKey(e.target.value)}
-            className={styles.authInput}
-            placeholder="Enter admin passkey..."
-          />
+        <div className={styles.userControlGroup}>
+          <div className={styles.userBadge}>
+            <span className={styles.userDot} />
+            <span>Signed in: <strong>Partners@admin.com</strong></span>
+          </div>
+
           <button type="button" onClick={fetchApplications} className={styles.refreshBtn}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <polyline points="23 4 23 10 17 10" />
@@ -224,6 +380,15 @@ export default function AdminPage() {
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
             </svg>
             Refresh
+          </button>
+
+          <button type="button" onClick={handleLogout} className={styles.logoutBtn}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            Sign Out
           </button>
         </div>
       </div>
